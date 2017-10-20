@@ -57,6 +57,7 @@ typedef struct {
     real_t **t;  // TODO(roversch): remove!
 } ocp_qp_out;
 
+
 typedef struct {
     int_t (*fun)(const ocp_qp_in *qp_in, ocp_qp_out *qp_out, void *args, void *mem, void *work);
     void (*initialize)(const ocp_qp_in *qp_in, void *args, void **mem, void **work);
@@ -67,6 +68,8 @@ typedef struct {
     void *mem;
     void *work;
 } ocp_qp_solver;
+
+// shit
 
 int_t ocp_qp_in_calculate_size(const int_t N, const int_t *nx, const int_t *nu, const int_t *nb,
                                const int_t *nc);

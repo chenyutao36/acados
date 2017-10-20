@@ -37,7 +37,8 @@ void print_matrix(char *file_name, const real_t *matrix, const int_t nrows,
     // Assumes column major ordering
     for (int_t i = 0; i < nrows; i++) {
         for (int_t j = 0; j < ncols; j++) {
-            fprintf(output, "%+.3e ", matrix[j * nrows + i]);
+            // fprintf(output, "%+.3e ", matrix[j * nrows + i]);
+            fprintf(output, "%5.3f ", matrix[j * nrows + i]);
         }
         fprintf(output, "\n");
     }
@@ -156,3 +157,5 @@ void print_ocp_qp(ocp_qp_in *qp) {
     }
     printf("\n");
 }
+
+
