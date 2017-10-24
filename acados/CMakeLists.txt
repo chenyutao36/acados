@@ -68,11 +68,7 @@ if(ACADOS_WITH_OOQP)
 endif()
 
 # Enable or disable timings
-<<<<<<< HEAD
 #if(ACADOS_MEASURE_TIMINGS)
-=======
-if(NOT ACADOS_NO_TIMINGS)
->>>>>>> upstream/master
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
 #endif()
 

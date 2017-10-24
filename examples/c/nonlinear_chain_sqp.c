@@ -27,6 +27,7 @@
 
 #include "acados/ocp_qp/ocp_qp_condensing_qpoases.h"
 #include "acados/ocp_qp/ocp_qp_condensing_hpipm.h"
+#include "acados/ocp_qp/ocp_qp_hpipm.h"
 
 #include "acados/sim/casadi_wrapper.h"
 #include "acados/sim/sim_erk_integrator.h"
@@ -36,12 +37,13 @@
 #include "acados/utils/types.h"
 #include "examples/c/chain_model/chain_model.h"
 
-#define NN 10
+#define NN 160
 #define UMAX 2
 #define PARALLEL 0
 
 // TODO(dimitris): fix this
 #define USE_QPOASES
+#define SAPRSE
 
 // static void shift_states(real_t *w, real_t *x_end, int_t NN) {
 //    for (int_t i = 0; i < NN; i++) {
@@ -60,8 +62,8 @@
 // Simple SQP example for acados
 int main() {
     int_t nil;
-    int_t NMF_MAX = 4;  // data exist up to 9 masses
-    int_t IMPL_MAX = 2;  // was originally 4, reduced to run the ctest faster
+    int_t NMF_MAX = 9;  // data exist up to 9 masses
+    int_t IMPL_MAX = 1;  // was originally 4, reduced to run the ctest faster
 
     for (int_t implicit = 0; implicit < IMPL_MAX; implicit++) {
         if (implicit == 0) {
@@ -193,7 +195,7 @@ int main() {
             sim_lifted_irk_memory irk_mem[NN];
 
             for (jj = 0; jj < NN; jj++) {
-                sim_in[jj].num_steps = 2;
+                sim_in[jj].num_steps = 4;
                 sim_in[jj].step = T / sim_in[jj].num_steps;
                 sim_in[jj].nx = NX;
                 sim_in[jj].nu = NU;
@@ -222,36 +224,36 @@ int main() {
                         sim_in[jj].jac = &jac_chain_nm4;
                         sim_in[jj].jac_fun = &jac_fun;
                         break;
-                    // case 4:
-                    //     sim_in[jj].vde = &vde_chain_nm5;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm5;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // case 5:
-                    //     sim_in[jj].vde = &vde_chain_nm6;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm6;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // case 6:
-                    //     sim_in[jj].vde = &vde_chain_nm7;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm7;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // case 7:
-                    //     sim_in[jj].vde = &vde_chain_nm8;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm8;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
-                    // default:
-                    //     sim_in[jj].vde = &vde_chain_nm9;
-                    //     sim_in[jj].VDE_forw = &vde_fun;
-                    //     sim_in[jj].jac = &jac_chain_nm9;
-                    //     sim_in[jj].jac_fun = &jac_fun;
-                    //     break;
+                    case 4:
+                        sim_in[jj].vde = &vde_chain_nm5;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm5;
+                        sim_in[jj].jac_fun = &jac_fun;
+                        break;
+                    case 5:
+                        sim_in[jj].vde = &vde_chain_nm6;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm6;
+                        sim_in[jj].jac_fun = &jac_fun;
+                        break;
+                    case 6:
+                        sim_in[jj].vde = &vde_chain_nm7;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm7;
+                        sim_in[jj].jac_fun = &jac_fun;
+                        break;
+                    case 7:
+                        sim_in[jj].vde = &vde_chain_nm8;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm8;
+                        sim_in[jj].jac_fun = &jac_fun;
+                        break;
+                    default:
+                        sim_in[jj].vde = &vde_chain_nm9;
+                        sim_in[jj].VDE_forw = &vde_fun;
+                        sim_in[jj].jac = &jac_chain_nm9;
+                        sim_in[jj].jac_fun = &jac_fun;
+                        break;
                 }
 
                 sim_in[jj].x = malloc(sizeof(*sim_in[jj].x) * (NX));
@@ -420,52 +422,74 @@ int main() {
             qp_in.Cu = (const real_t **)pCu;
             qp_in.lc = (const real_t **)plc;
             qp_in.uc = (const real_t **)puc;;
+
             qp_out.x = px;
             qp_out.u = pu;
             qp_out.pi = ppi;
             qp_out.lam = plam;
 
             // Initialize solver
-            #ifdef USE_QPOASES
-            ocp_qp_condensing_qpoases_args *qpsolver_args =
-                ocp_qp_condensing_qpoases_create_arguments(&qp_in);
-            ocp_qp_condensing_qpoases_memory *qpsolver_memory =
-                ocp_qp_condensing_qpoases_create_memory(&qp_in, qpsolver_args);
+            // #ifdef USE_QPOASES
+            // ocp_qp_condensing_qpoases_args *qpsolver_args =
+            //     ocp_qp_condensing_qpoases_create_arguments(&qp_in);
 
-            int_t qpsolver_workspace_size =
-                ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, qpsolver_args);
-            int_t qpsolver_memory_size =
-                ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, qpsolver_args);
-            #else
-            ocp_qp_condensing_hpipm_args *qpsolver_args =
-                ocp_qp_condensing_hpipm_create_arguments(qp_in);
-            ocp_qp_condensing_hpipm_memory qpsolver_memory;
+            // qpsolver_args->warm_start = 1;
+            // ocp_qp_condensing_qpoases_memory *qpsolver_memory =
+            //     ocp_qp_condensing_qpoases_create_memory(&qp_in, qpsolver_args);
 
-            qpsolver_args->mu_max = 1e-8;
+            // int_t qpsolver_workspace_size =
+            //     ocp_qp_condensing_qpoases_calculate_workspace_size(&qp_in, qpsolver_args);
+            // int_t qpsolver_memory_size =
+            //     ocp_qp_condensing_qpoases_calculate_memory_size(&qp_in, qpsolver_args);
+            // #else
+            // ocp_qp_condensing_hpipm_args *qpsolver_args =
+            //     ocp_qp_condensing_hpipm_create_arguments(&qp_in);
+            // qpsolver_args->iter_max = 20;
+            // qpsolver_args->alpha_min = 1e-8;
+            // qpsolver_args->mu0 = 1.0;
+            // // ocp_qp_condensing_hpipm_memory qpsolver_memory;
+
+            // ocp_qp_condensing_hpipm_memory *qpsolver_memory = 
+            //     ocp_qp_condensing_hpipm_create_memory(&qp_in, qpsolver_args);
+
+            // int_t qpsolver_workspace_size =
+            //     ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, qpsolver_args);
+            // int_t qpsolver_memory_size =
+            //     ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, qpsolver_args);
+            // #endif
+
+            // void *qpsolver_work = calloc(qpsolver_workspace_size, sizeof(char));
+
+            // #ifdef USE_QPOASES
+            // (void) qpsolver_memory_size;
+            // #else
+            // // ocp_qp_condensing_hpipm_assign_memory(&qp_in, qpsolver_args, &qpsolver_memory,
+            // //     qpsolver_mem);
+            // (void) qpsolver_memory_size;
+            // #endif
+
+            acados_timer timer;
+            // #ifndef USE_QPOASES
+            acados_timer timer_hpipm;
+            // #endif
+
+            ocp_qp_hpipm_args *qpsolver_args = ocp_qp_hpipm_create_arguments(&qp_in);
             qpsolver_args->iter_max = 20;
             qpsolver_args->alpha_min = 1e-8;
             qpsolver_args->mu0 = 1.0;
+            ocp_qp_hpipm_memory *qpsolver_memory = 
+                ocp_qp_hpipm_create_memory(&qp_in, qpsolver_args);
 
             int_t qpsolver_workspace_size =
-                ocp_qp_condensing_hpipm_calculate_workspace_size(&qp_in, qpsolver_args);
-            int_t qpsolver_memory_size =
-                ocp_qp_condensing_hpipm_calculate_memory_size(&qp_in, qpsolver_args);
-            #endif
+                ocp_qp_hpipm_calculate_workspace_size(&qp_in, qpsolver_args);
 
             void *qpsolver_work = calloc(qpsolver_workspace_size, sizeof(char));
 
-            #ifdef USE_QPOASES
-            (void) qpsolver_memory_size;
-            #else
-            ocp_qp_condensing_hpipm_assign_memory(&qp_in, qpsolver_args, &qpsolver_memory,
-                qpsolver_mem);
-            #endif
-
-            acados_timer timer;
             real_t timings = 0;
             real_t timings_sim = 0;
             real_t timings_la = 0;
             real_t timings_ad = 0;
+            real_t timings_qp = 0;
             //    for (int_t iter = 0; iter < max_iters; iter++) {
             //        printf("\n------ TIME STEP %d ------\n", iter);
 
@@ -548,13 +572,21 @@ int main() {
 
                 int status = 0;
 
-                #ifdef USE_QPOASES
-                status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, qpsolver_args,
+                // #ifdef USE_QPOASES
+                // status = ocp_qp_condensing_qpoases(&qp_in, &qp_out, qpsolver_args,
+                //     qpsolver_memory, qpsolver_work);
+                //     timings_qp += qpsolver_memory->cputime;
+                // #else
+                // acados_tic(&timer_hpipm);
+                // status = ocp_qp_condensing_hpipm(&qp_in, &qp_out, qpsolver_args,
+                //     qpsolver_memory, qpsolver_work);
+                // timings_qp += acados_toc(&timer_hpipm);
+                // #endif
+
+                acados_tic(&timer_hpipm);
+                status = ocp_qp_hpipm(&qp_in, &qp_out, qpsolver_args,
                     qpsolver_memory, qpsolver_work);
-                #else
-                status = ocp_qp_condensing_hpipm(&qp_in, &qp_out, qpsolver_args,
-                    &qpsolver_memory, qpsolver_work);
-                #endif
+                timings_qp += acados_toc(&timer_hpipm);
 
                 if (status) {
                     printf("qpOASES returned error status %d\n", status);
@@ -598,6 +630,8 @@ int main() {
                    1e3 * timings_ad / (max_sqp_iters * max_iters));
             printf("  of which %.3f ms spent in BLASFEO.\n",
                    1e3 * timings_la / (max_sqp_iters * max_iters));
+                printf("  of which %.3f ms spent in QP SOLVER.\n",
+                   1e3 * timings_qp / (max_sqp_iters * max_iters));
             printf("--Total of %.3f ms per SQP iteration.--\n",
                    1e3 * timings / (max_sqp_iters * max_iters));
 
@@ -606,7 +640,15 @@ int main() {
             //    #endif  // DEBUG
 
             // TODO(dimitris): this program is leaking memory
+
+            free(qpsolver_args);
+            free(qpsolver_memory);
+            free(qpsolver_work);
         }
     }
+
+   
+
+
     return 0 * nil;
 }
