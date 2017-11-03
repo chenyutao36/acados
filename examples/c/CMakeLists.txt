@@ -32,6 +32,9 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/pathcon_*
     chain_model/pathconN_*)
 
+file(GLOB YUTAO_MODEL_SRC
+    chain_model/vde_chain_nm2.c)
+
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
@@ -92,6 +95,12 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     target_include_directories(nonlinear_chain_sqp_example PRIVATE "${CMAKE_BINARY_DIR}")
     target_link_libraries(nonlinear_chain_sqp_example acados)
     add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
+
+    # add my onw examples
+    add_executable(sim_standalone_example
+        sim_standalone.c ${YUTAO_MODEL_SRC})
+    target_link_libraries(sim_standalone_example acados)
+    add_test(sim_standalone_example sim_standalone_example)
 endif()
 
 # add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})
