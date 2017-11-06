@@ -18,6 +18,7 @@
 #
 
 configure_file(chain_model/chain_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/chain_model/chain_model.h @ONLY)
+configure_file(yutao_model/yutao_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/yutao_model/yutao_model.h @ONLY)
 
 # Define sources for models used in the examples
 file(GLOB CHAIN_MODEL_SRC
@@ -33,7 +34,11 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/pathconN_*)
 
 file(GLOB YUTAO_MODEL_SRC
-    chain_model/vde_chain_nm2.c)
+    chain_model/vde_chain_nm2.c
+    chain_model/vde_chain_nm9.c
+    yutao_model/vde_forw_model.c
+    yutao_model/vde_adj_model.c
+    )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
@@ -101,6 +106,12 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
         sim_standalone.c ${YUTAO_MODEL_SRC})
     target_link_libraries(sim_standalone_example acados)
     add_test(sim_standalone_example sim_standalone_example)
+
+    # add old integrator examples
+    add_executable(sim_standalone_old_example
+    sim_standalone_old.c ${YUTAO_MODEL_SRC})
+    target_link_libraries(sim_standalone_old_example acados)
+    add_test(sim_standalone_old_example sim_standalone_old_example)
 endif()
 
 # add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})

@@ -12,23 +12,35 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "examples/c/chain_model/chain_model.h"
+// #include "examples/c/chain_model/chain_model.h"
+#include "examples/c/yutao_model/yutao_model.h"
+
+// blasfeo
+#include "external/blasfeo/include/blasfeo_target.h"
+#include "external/blasfeo/include/blasfeo_common.h"
+#include "external/blasfeo/include/blasfeo_d_aux.h"
+#include "external/blasfeo/include/blasfeo_d_aux_ext_dep.h"
+#include "external/blasfeo/include/blasfeo_v_aux_ext_dep.h"
+#include "external/blasfeo/include/blasfeo_d_blas.h"
 
 int main() {
 
-    int ii,jj,nil;
+    int ii,jj;
+    // int nil;
 
-    int NMF = 1;
-    int nx = 6 * NMF;
-    int nu = 3;
-    int NF = nx + nu;
-    int NA = 0;
+    // int NMF = 8;
+    // int nx = 6 * NMF;
+    int nx = 4;
+    int nu = 1;
+    int NF = nx + nu; // columns of forward seed
+    int NA = nx; // number of elements of adjoint seed
     int nX = nx *(1+NF);
 
-    double T = 0.2;
+    double T = 0.05;
     int num_stages = 4;
     double *xref;
     xref = (double*)calloc(nx, sizeof(double));
+    xref[1] = 3.14;
 
     double A_rk[] = {0.0, 0.5, 0.0, 0.0,
         0.0, 0.0, 0.5, 0.0,
@@ -48,52 +60,38 @@ int main() {
         rk_opts->c_vec[ii] = C_rk[ii];
     }
 
-    printf("A:\n");
-    for (ii=0;ii<num_stages;ii++){
-        for (jj=0;jj<num_stages;jj++)
-            printf("%4.2f ",rk_opts->A_mat[jj*num_stages+ii]);
-        printf("\n");
-    }
-    printf("num_stages: %d", rk_opts->num_stages);
-        
-    printf("\n");
-
-    printf("b:");
-    for (ii=0;ii<num_stages;ii++)
-        printf("%4.2f ",rk_opts->b_vec[ii]);
-    printf("\n");
-
     sim_in *in = create_sim_in(nx, nu ,NF, NA);
 
     in->num_steps = 4;
     in->step = T / in->num_steps;
     in->sens_forw = true;
-    in->sens_adj = false;
+    in->sens_adj = true;
     in->sens_hess = false;
 
-    in->vde = &vde_chain_nm2;
+    in->vde = & vdeFun;
+    in->adj = & adjFun;
+    // in->vde = &vde_chain_nm9;
     in->VDE_forw = &vde_fun;
-    // in->jac = &jac_chain_nm2;
-    // in->jac_fun = &jac_fun;
+    in->VDE_adj = &adj_fun;
 
     printf("nx=%d nu=%d NF=%d NA=%d nX=%d \n",in->nx, in->nu, in->NF, in->NA, nX);
 
-    FILE *refStates;
-    refStates = fopen(XN_NM2_FILE, "r");
-    // refStates = fopen("/home/yutaochen/Documents/MATLAB/Packages/acados/examples/c/chain_model/xN_nm2.txt","r");
+    // FILE *refStates;
+    // refStates = fopen(XN_NM9_FILE, "r");
     for (ii = 0; ii < nx; ii++) {
-        nil = fscanf(refStates, "%lf", &xref[ii]);
+        // nil = fscanf(refStates, "%lf", &xref[ii]);
         in->x[ii] = xref[ii];
     }
-    printf("scanf return: %d\n", nil);
-    fclose(refStates);
+    // if (!nil)
+    //     printf("xref read successfully");
     for (ii = 0;ii < nu; ii++){
-        in->u[ii] = 1.0;
+        in->u[ii] = 0.0;
     }
 
-    printf("x:");
+
+    printf("x0:\n");
     for (ii = 0; ii < nx; ii++)
-        printf("%4.2f ",in->x[ii]);
+        printf("%8.5f ",in->x[ii]);
     printf("\n");
 
     for (ii = 0; ii < nx * NF; ii++)
@@ -101,13 +99,8 @@ int main() {
     for (ii = 0; ii < nx; ii++)
         in->S_forw[ii * (nx + 1)] = 1.0;
 
-    double *S_forw_in = in->S_forw;
-    printf("S_forw_in: \n");
-    for (ii=0;ii<nx;ii++){
-        for (jj=0;jj<NF;jj++)
-            printf("%4.2f ",S_forw_in[jj*nx+ii]);
-        printf("\n");
-    }
+    for (ii = 0; ii < nx; ii++)
+        in->S_adj[ii] = 1.0;
 
     sim_erk_memory *erk_mem = sim_erk_create_memory(rk_opts, in);
 
@@ -117,38 +110,65 @@ int main() {
 
     double *xn = out->xn;
 
-    printf("xn: ");
+    printf("xn: \n");
     for (ii=0;ii<nx;ii++)
-        printf("%4.2f ",xn[ii]);
+        printf("%8.5f ",xn[ii]);
 
     printf("\n");
-    if (in->sens_forw){
-        double *S_forw_out = out->S_forw;
+    double *S_forw_out = out->S_forw;
+    if (in->sens_forw){      
         printf("S_forw_out: \n");
         for (ii=0;ii<nx;ii++){
             for (jj=0;jj<NF;jj++)
-                printf("%4.2f ",S_forw_out[jj*nx+ii]);
+                printf("%8.5f ",S_forw_out[jj*nx+ii]);
             printf("\n");
         }
     }
 
     printf("\n");
-    double *rhs_forw_in = erk_mem->rhs_forw_in;
-    printf("rhs_forw_in:\n");
-    for (ii=0;ii<nX+nu;ii++){
-        printf("%4.2f ",rhs_forw_in[ii]);
+    double *S_adj_out = out->S_adj;
+    if (in->sens_adj){
+        printf("S_adj_out: \n");
+        for (ii=0;ii<nx+nu;ii++){
+                printf("%8.5f ",S_adj_out[ii]);
+        }
     }
 
     printf("\n");
-    printf("cpt: %4.2f [ms]\n", out->info->CPUtime*1000);
-    printf("AD cpt: %4.2f [ms]\n", out->info->ADtime*1000);
-     
+    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
+    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
+
+    struct d_strmat sA;
+    void *mA; 
+    v_zeros_align(&mA, d_size_strmat(nx, nx+nu));
+    d_create_strmat(nx, nx+nu, &sA, mA);
+    d_cvt_mat2strmat(nx, nx+nu, S_forw_out, nx, &sA, 0, 0);
+
+    // d_print_strmat(nx,nx+nu,&sA,0,0);
+
+    struct d_strvec sx;
+    void *mx; 
+    v_zeros_align(&mx, d_size_strvec(nx));
+    d_create_strvec(nx, &sx, mx);
+    d_cvt_vec2strvec(nx, in->S_adj, &sx, 0);
+
+    struct d_strvec sz;
+    void *mz; 
+    v_zeros_align(&mz, d_size_strvec(nx+nu));
+    d_create_strvec(nx+nu, &sz, mz);
+    dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+    
+    printf("Jac times lambdaX:\n");
+    d_print_tran_strvec(nx+nu, &sz, 0);
+
     free(xref);
     free(rk_opts);
     free(in);
     free(erk_mem);
     free(out);
+    v_free_align(mA);
+    v_free_align(mx);
+    v_free_align(mz);
     
-
     return flag;
 }

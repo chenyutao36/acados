@@ -80,3 +80,28 @@ void discrete_model_fun(const int_t nx, const int_t nu, const real_t *in, real_t
 
     discrete_model(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
+
+void adj_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t adj){
+    const double *x = in;
+    const double *lambdaX = in + nx;
+    const double *u = in + nx + nx;
+
+    double *adj_x_out = out;
+    double *adj_u_out = out + nx;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[4];
+    double *casadi_res[3];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = lambdaX;
+    casadi_arg[2] = u;
+
+    casadi_res[0] = adj_x_out;
+    casadi_res[1] = adj_u_out;
+
+    adj(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}

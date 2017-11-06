@@ -28,7 +28,7 @@
 #include "acados/sim/sim_common_yt.h"
 #include "acados/sim/sim_erk_integrator_yt.h"
 
-// #include "acados/sim/sim_casadi_wrapper.h"
+#include "acados/sim/sim_casadi_wrapper.h"
 
 int_t erk_calculate_memory_size(sim_RK_opts *opts, sim_in *in)
 {
@@ -80,7 +80,7 @@ int_t NF = in->NF;
 int_t num_stages = opts->num_stages; // number of stages
 int_t nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
 int_t nhess = (NF + 1) * NF / 2;
-uint num_steps = in->num_steps;  // number of steps
+int_t num_steps = in->num_steps;  // number of steps
 
 char *c_ptr = (char *)raw_memory;
 
@@ -159,9 +159,8 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
     real_t *u = in->u;
     real_t *S_forw_in = in->S_forw; 
     int_t num_steps = in->num_steps;
-    int_t step = in->step;
+    real_t step = in->step;
 
-    // if (in->sens_forw)
     real_t *S_adj_in = in->S_adj;
 
     real_t *A_mat = opts->A_mat;
@@ -182,7 +181,6 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
     real_t *S_adj_out = out->S_adj;
     real_t *S_hess_out = out->S_hess;
 
-
     acados_timer timer, timer_ad;
     double timing_ad = 0.0;
 
@@ -200,9 +198,7 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
     // FORWARD SWEEP:
     for (istep = 0; istep < num_steps; istep++) {
         if (in->sens_adj) {
-            // K_traj = &work->K_traj[istep * num_stages * nX];
             K_traj = mem->K_traj + istep * num_stages * nX;
-            // forw_traj = &work->out_forw_traj[(istep + 1) * nX];
             forw_traj = mem->out_forw_traj + (istep + 1) * nX;
             for (i = 0; i < nX; i++)
                 forw_traj[i] = forw_traj[i - nX];
@@ -214,15 +210,15 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
             for (j = 0; j < s; j++){
                 a = A_mat[j * num_stages + s];
                 if (a!=0){
-                    a *= step;
+                    a *= step;                   
                     for (i = 0; i < nX; i++)
                         rhs_forw_in[i] += a * K_traj[j * nX + i];
                 }
             }
+
             acados_tic(&timer_ad);
-            // in->VDE_forw(nx, nu, rhs_forw_in, &(K_traj[s*nX]), in->vde);  // k evaluation
             in->VDE_forw(nx, nu, rhs_forw_in, K_traj+s*nX, in->vde);  // k evaluation
-            timing_ad += acados_toc(&timer_ad);
+            timing_ad += acados_toc(&timer_ad)*1000;
         }
         for (s = 0; s < num_stages; s++){
             b = step * b_vec[s];
@@ -240,8 +236,10 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
 
     // ADJOINT SWEEP:
     if (in->sens_adj) {
-        for (i = 0; i < nx + nu; i++)
+        for (i = 0; i < nx; i++)
             adj_tmp[i] = S_adj_in[i];
+        for (i = 0; i < nu; i++)
+            adj_tmp[nx+i] = 0.0;
 
         int nForw = nx;
         int nAdj = nx + nu;
@@ -255,35 +253,33 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
             rhs_adj_in[nForw + nx + i] = u[i];
        
         for (istep = num_steps - 1; istep > -1; istep--) {
-            // K_traj = &work->K_traj[istep * opts->num_stages * nx * (1 + NF)];
             K_traj = mem->K_traj + istep * num_stages * nX;
-            // forw_traj = &work->out_forw_traj[istep * nx * (1 + NF)];
             forw_traj = mem->out_forw_traj + istep * nX;
             for (s = num_stages - 1; s > -1; s--) {
                 // forward variables:
                 for (i = 0; i < nForw; i++)
-                    rhs_adj_in[i] = forw_traj[i];
+                    rhs_adj_in[i] = forw_traj[i]; // extract x trajectory
                 for (j = 0; j < s; j++)
                     a = A_mat[j * num_stages + s];
                     if (a!=0){
                         a*=step;
                         for (i = 0; i < nForw; i++)
-                            rhs_adj_in[i] += step * a *K_traj[j * nX + i];
-                    }
+                            rhs_adj_in[i] += a *K_traj[j * nX + i];
+                    } // plus k traj
                 // adjoint variables:
                 b = step * b_vec[s];
                 for (i = 0; i < nx; i++)
                     rhs_adj_in[nForw + i] = b * adj_tmp[i];
-                for (j = s + 1; j < num_stages; j++)
+                for (j = s + 1; j < num_stages; j++){
                     a = A_mat[s * num_stages + j];
                     if (a!=0){
-                        a*=step;
+                        a *= step;
                         for (i = 0; i < nx; i++)
-                        rhs_adj_in[nForw + i] += a * adj_traj[j * nAdj + i];
+                            rhs_adj_in[nForw + i] += a * adj_traj[j * nAdj + i];
                     }
-                    
-                acados_tic(&timer_ad);
-                in->VDE_adj(rhs_adj_in, &(adj_traj[s*nAdj]));  // adjoint VDE evaluation
+                }
+                acados_tic(&timer_ad);  
+                in->VDE_adj(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->adj); // adjoint VDE evaluation
                 timing_ad += acados_toc(&timer_ad);
             }
             for (s = 0; s < num_stages; s++)
@@ -297,56 +293,8 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
                 S_hess_out[i] = adj_tmp[nx + nu + i];
         }
     }
-    out->info->CPUtime = acados_toc(&timer);
+    out->info->CPUtime = acados_toc(&timer)*1000;
     out->info->LAtime = 0.0;
     out->info->ADtime = timing_ad;
     return 0;  // success
 }
-
-// void sim_erk_create_arguments(void *args, const int_t num_stages) {
-//     sim_RK_opts *opts = (sim_RK_opts *)args;
-//     opts->scheme.type = exact;
-//     if (num_stages == 1) {
-//         opts->num_stages = 1;  // explicit Euler
-//         opts->A_mat = calloc(num_stages * num_stages, sizeof(*opts->A_mat));
-//         opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
-//         opts->c_vec = calloc(num_stages, sizeof(*opts->c_vec));
-//         opts->A_mat[0] = 0;
-//         opts->b_vec[0] = 1.0;
-//         opts->c_vec[0] = 0;
-//     } else if (num_stages == 4) {
-//         opts->num_stages = 4;  // 4-stage, 4th order ERK method
-//         opts->A_mat = calloc(num_stages * num_stages, sizeof(*opts->A_mat));
-//         opts->b_vec = calloc(num_stages, sizeof(*opts->b_vec));
-//         opts->c_vec = calloc(num_stages, sizeof(*opts->c_vec));
-
-//         memcpy(opts->A_mat,
-//             ((real_t[]){0, 0.5, 0, 0, 0, 0, 0.5, 0, 0, 0, 0, 1, 0, 0, 0, 0}),
-//             sizeof(*opts->A_mat) * (num_stages * num_stages));
-//         memcpy(opts->b_vec, ((real_t[]){1.0 / 6, 2.0 / 6, 2.0 / 6, 1.0 / 6}),
-//             sizeof(*opts->b_vec) * (num_stages));
-//         memcpy(opts->c_vec, ((real_t[]){0.0, 0.5, 0.5, 1.0}),
-//             sizeof(*opts->c_vec) * (num_stages));
-//     } else {
-//         // throw error somehow?
-//     }
-// }
-
-
-
-// void sim_erk_initialize(const sim_in *in, void *args, void **work) {
-//     sim_RK_opts *opts = (sim_RK_opts *)args;
-
-//     // TODO(dimitris): opts should be an input to initialize
-//     if (opts->num_stages > 0) {
-//         sim_erk_create_arguments(args, opts->num_stages);
-//     } else {
-//         sim_erk_create_arguments(args, 4);
-//     }
-//     int_t work_space_size = sim_erk_calculate_workspace_size(in, args);
-//     *work = (void *)malloc(work_space_size);
-// }
-
-
-
-// void sim_erk_destroy(void *work) { free(work); }

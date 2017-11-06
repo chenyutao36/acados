@@ -44,12 +44,13 @@ typedef struct {
     casadi_function_t vde;
     void (*VDE_forw)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
 
-    void (*VDE_adj)(double *, double *);
+    casadi_function_t adj;
+    void (*VDE_adj)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
     casadi_function_t jac;
     void (*jac_fun)(int, double *, double *, casadi_function_t);
 
-    double step;
-    uint num_steps;
+    real_t step;
+    int_t num_steps;
 
     // real_t *grad_K;  // gradient correction
 } sim_in;
