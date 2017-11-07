@@ -36,7 +36,7 @@ int_t erk_calculate_memory_size(sim_RK_opts *opts, sim_in *in)
 int_t nx = in->nx;
 int_t nu = in->nu; 
 int_t NF = in->NF;
-// int_t NA = in->NA;  
+ 
 int_t num_stages = opts->num_stages; // number of stages
 int_t nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
 int_t nhess = (NF + 1) * NF / 2;
@@ -76,7 +76,7 @@ char *assign_erk_memory(sim_RK_opts *opts, sim_in *in, sim_erk_memory **memory, 
 int_t nx = in->nx;
 int_t nu = in->nu; 
 int_t NF = in->NF;
-// int_t NA = in->NA;  
+
 int_t num_stages = opts->num_stages; // number of stages
 int_t nX = nx*(1+NF); // (nx) for ODE and (NF*nx) for VDE
 int_t nhess = (NF + 1) * NF / 2;
@@ -151,7 +151,7 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
     int_t NF = in->NF;
     if (!in->sens_forw)
         NF = 0;
-    // int_t NA = in->NA;
+    
     int_t nhess = (NF + 1) * NF / 2;
     int_t nX = nx * (1 + NF);
 
@@ -244,11 +244,14 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
         int nForw = nx;
         int nAdj = nx + nu;
         if (in->sens_hess) {
-            nForw = nx * (1 + NF);
-            nAdj = nx + nu + nhess;
+            nForw = nX;
+            nAdj = nx + nu + nhess;         
             for (i = 0; i < nhess; i++)
                 adj_tmp[nx + nu + i] = 0.0;
         }
+
+        printf("\nnFOrw=%d nAdj=%d\n", nForw, nAdj);
+
         for (i = 0; i < nu; i++)
             rhs_adj_in[nForw + nx + i] = u[i];
        
@@ -279,8 +282,16 @@ int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_) {
                     }
                 }
                 acados_tic(&timer_ad);  
-                in->VDE_adj(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->adj); // adjoint VDE evaluation
+                if (in->sens_hess){
+                    in->Hess_fun(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->hess);                   
+                }else{
+                    in->VDE_adj(nx, nu, rhs_adj_in, adj_traj+s*nAdj, in->adj); // adjoint VDE evaluation
+                }              
                 timing_ad += acados_toc(&timer_ad);
+
+                // printf("\nadj_traj:\n");
+                // for (int ii=0;ii<num_stages*nAdj;ii++)
+                //     printf("%3.1f ", adj_traj[ii]);
             }
             for (s = 0; s < num_stages; s++)
                 for (i = 0; i < nAdj; i++)

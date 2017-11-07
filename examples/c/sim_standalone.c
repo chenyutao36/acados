@@ -26,14 +26,10 @@
 int main() {
 
     int ii,jj;
-    // int nil;
-
-    // int NMF = 8;
-    // int nx = 6 * NMF;
+    
     int nx = 4;
     int nu = 1;
     int NF = nx + nu; // columns of forward seed
-    int NA = nx; // number of elements of adjoint seed
     int nX = nx *(1+NF);
 
     double T = 0.05;
@@ -60,7 +56,7 @@ int main() {
         rk_opts->c_vec[ii] = C_rk[ii];
     }
 
-    sim_in *in = create_sim_in(nx, nu ,NF, NA);
+    sim_in *in = create_sim_in(nx, nu ,NF);
 
     in->num_steps = 4;
     in->step = T / in->num_steps;
@@ -70,26 +66,22 @@ int main() {
 
     in->vde = & vdeFun;
     in->adj = & adjFun;
-    // in->vde = &vde_chain_nm9;
     in->VDE_forw = &vde_fun;
     in->VDE_adj = &adj_fun;
+    in->hess = &hessFun;
+    in->Hess_fun = hess_fun;
 
-    printf("nx=%d nu=%d NF=%d NA=%d nX=%d \n",in->nx, in->nu, in->NF, in->NA, nX);
+    printf("\nnx=%d nu=%d NF=%d nX=%d \n",in->nx, in->nu, in->NF, nX);
 
-    // FILE *refStates;
-    // refStates = fopen(XN_NM9_FILE, "r");
     for (ii = 0; ii < nx; ii++) {
-        // nil = fscanf(refStates, "%lf", &xref[ii]);
         in->x[ii] = xref[ii];
     }
-    // if (!nil)
-    //     printf("xref read successfully");
     for (ii = 0;ii < nu; ii++){
         in->u[ii] = 0.0;
     }
 
 
-    printf("x0:\n");
+    printf("\nx0:\n");
     for (ii = 0; ii < nx; ii++)
         printf("%8.5f ",in->x[ii]);
     printf("\n");
@@ -104,53 +96,58 @@ int main() {
 
     sim_erk_memory *erk_mem = sim_erk_create_memory(rk_opts, in);
 
-    sim_out *out = create_sim_out(nx, nu, NF, NA);
+    sim_out *out = create_sim_out(nx, nu, NF);
     
     int flag = sim_erk_yt(in, out, rk_opts, erk_mem);
 
     double *xn = out->xn;
 
-    printf("xn: \n");
+    printf("\nxn: \n");
     for (ii=0;ii<nx;ii++)
         printf("%8.5f ",xn[ii]);
-
     printf("\n");
-    double *S_forw_out = out->S_forw;
-    if (in->sens_forw){      
-        printf("S_forw_out: \n");
-        for (ii=0;ii<nx;ii++){
-            for (jj=0;jj<NF;jj++)
-                printf("%8.5f ",S_forw_out[jj*nx+ii]);
+
+    double *S_forw_out = out->S_forw;  
+    printf("\nS_forw_out: \n");
+    for (ii=0;ii<nx;ii++){
+        for (jj=0;jj<NF;jj++)
+            printf("%8.5f ",S_forw_out[jj*nx+ii]);
+        printf("\n");
+    }
+     
+    double *S_adj_out = out->S_adj;
+    printf("\nS_adj_out: \n");
+    for (ii=0;ii<nx+nu;ii++){
+        printf("%8.5f ",S_adj_out[ii]);
+    }
+    printf("\n"); 
+ 
+    double zero = 0.0;
+    if(in->sens_hess){ 
+        double *S_hess_out = out->S_hess;
+        printf("\nS_hess_out: \n");
+        for (ii=0;ii<NF;ii++){
+            for (jj=0;jj<NF;jj++){
+                if (jj>ii){
+                    printf("%8.5f ",zero);
+                }else{
+                    printf("%8.5f ",S_hess_out[jj*NF+ii]);
+                }
+            }
             printf("\n");
         }
     }
 
-    printf("\n");
-    double *S_adj_out = out->S_adj;
-    if (in->sens_adj){
-        printf("S_adj_out: \n");
-        for (ii=0;ii<nx+nu;ii++){
-                printf("%8.5f ",S_adj_out[ii]);
-        }
-    }
 
     printf("\n");
     printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
     printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
 
     struct d_strmat sA;
-    void *mA; 
-    v_zeros_align(&mA, d_size_strmat(nx, nx+nu));
-    d_create_strmat(nx, nx+nu, &sA, mA);
-    d_cvt_mat2strmat(nx, nx+nu, S_forw_out, nx, &sA, 0, 0);
-
-    // d_print_strmat(nx,nx+nu,&sA,0,0);
+    d_create_strmat(nx, nx+nu, &sA, S_forw_out);
 
     struct d_strvec sx;
-    void *mx; 
-    v_zeros_align(&mx, d_size_strvec(nx));
-    d_create_strvec(nx, &sx, mx);
-    d_cvt_vec2strvec(nx, in->S_adj, &sx, 0);
+    d_create_strvec(nx, &sx, in->S_adj);
 
     struct d_strvec sz;
     void *mz; 
@@ -158,7 +155,7 @@ int main() {
     d_create_strvec(nx+nu, &sz, mz);
     dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
     
-    printf("Jac times lambdaX:\n");
+    printf("\nJac times lambdaX:\n");
     d_print_tran_strvec(nx+nu, &sz, 0);
 
     free(xref);
@@ -166,8 +163,7 @@ int main() {
     free(in);
     free(erk_mem);
     free(out);
-    v_free_align(mA);
-    v_free_align(mx);
+   
     v_free_align(mz);
     
     return flag;

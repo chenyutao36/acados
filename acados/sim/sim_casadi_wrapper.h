@@ -35,6 +35,8 @@ void discrete_model_fun(const int_t nx, const int_t nu, const real_t *in, real_t
 
 void adj_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t adj);
 
+void hess_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t hess);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

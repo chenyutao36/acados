@@ -34,10 +34,11 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/pathconN_*)
 
 file(GLOB YUTAO_MODEL_SRC
-    chain_model/vde_chain_nm2.c
-    chain_model/vde_chain_nm9.c
+    # chain_model/vde_chain_nm2.c
+    # chain_model/vde_chain_nm9.c
     yutao_model/vde_forw_model.c
     yutao_model/vde_adj_model.c
+    yutao_model/vde_hess_model.c
     )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
@@ -108,10 +109,10 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_test(sim_standalone_example sim_standalone_example)
 
     # add old integrator examples
-    add_executable(sim_standalone_old_example
-    sim_standalone_old.c ${YUTAO_MODEL_SRC})
-    target_link_libraries(sim_standalone_old_example acados)
-    add_test(sim_standalone_old_example sim_standalone_old_example)
+    # add_executable(sim_standalone_old_example
+    # sim_standalone_old.c ${YUTAO_MODEL_SRC})
+    # target_link_libraries(sim_standalone_old_example acados)
+    # add_test(sim_standalone_old_example sim_standalone_old_example)
 endif()
 
 # add_executable(pendulum_hpmpc_libstr_example pendulum_hpmpc_libstr.c ${PENDULUM_MODEL_SRC})

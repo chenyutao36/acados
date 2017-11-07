@@ -7,7 +7,7 @@
 #include "acados/utils/print.h"
 #include "acados/sim/sim_common_yt.h"
 
-int_t sim_in_calculate_size(int_t nx, int_t nu, int_t NF, int_t NA)
+int_t sim_in_calculate_size(int_t nx, int_t nu, int_t NF)
 {
 
 int_t size = sizeof(sim_in);
@@ -15,7 +15,7 @@ int_t size = sizeof(sim_in);
 size += nx * sizeof(real_t); // x
 size += nu * sizeof(real_t); // u
 size += nx * NF * sizeof(real_t); // S_forw
-size += NA * sizeof(real_t); // S_adj
+size += nx * sizeof(real_t); // S_adj
 
 size = (size + 63) / 64 * 64;
 size += 1 * 64;
@@ -23,7 +23,7 @@ size += 1 * 64;
 return size;
 }
 
-char *assign_sim_in(int_t nx, int_t nu, int_t NF, int_t NA, sim_in **in, void *ptr)
+char *assign_sim_in(int_t nx, int_t nu, int_t NF, sim_in **in, void *ptr)
 {
 
 char *c_ptr = (char *) ptr;
@@ -34,7 +34,6 @@ c_ptr += sizeof(sim_in);
 (*in)->nx = nx;
 (*in)->nu = nu; 
 (*in)->NF = NF;
-(*in)->NA = NA; 
 
 size_t s_ptr = (size_t)c_ptr;
 s_ptr = (s_ptr + 63) / 64 * 64;
@@ -50,26 +49,26 @@ c_ptr += nu*sizeof(real_t);
 c_ptr += nx * NF *sizeof(real_t);
 
 (*in)->S_adj = (real_t *) c_ptr;
-c_ptr += NA*sizeof(real_t);
+c_ptr += nx *sizeof(real_t);
 
 return c_ptr;
 }
 
-sim_in *create_sim_in(int_t nx, int_t nu, int_t NF, int_t NA) {
+sim_in *create_sim_in(int_t nx, int_t nu, int_t NF) {
 
 sim_in *in;
 
-int_t bytes = sim_in_calculate_size(nx, nu, NF, NA);
+int_t bytes = sim_in_calculate_size(nx, nu, NF);
 
 void *ptr = malloc(bytes);
 
-char *ptr_end = assign_sim_in(nx, nu, NF, NA, &in, ptr);
+char *ptr_end = assign_sim_in(nx, nu, NF, &in, ptr);
 assert((char*)ptr + bytes >= ptr_end); (void) ptr_end;
 
 return in;
 }
 
-int_t sim_out_calculate_size(int_t nx, int_t nu, int_t NF, int_t NA)
+int_t sim_out_calculate_size(int_t nx, int_t nu, int_t NF)
 {
 
 int_t size = sizeof(sim_out);
@@ -78,8 +77,8 @@ size += sizeof(sim_info);
 
 size += nx * sizeof(real_t); // xn
 size += nx * NF * sizeof(real_t); // S_forw
-size += NA * sizeof(real_t); // S_adj
-size += (NF + 1) * NF / 2 * sizeof(real_t); // S_hess
+size += (nx + nu) * sizeof(real_t); // S_adj
+size += ((NF + 1) * NF / 2) * sizeof(real_t); // S_hess
 
 size = (size + 63) / 64 * 64;
 size += 1 * 64;
@@ -87,7 +86,7 @@ size += 1 * 64;
 return size;
 }
 
-char *assign_sim_out(int_t nx, int_t nu, int_t NF, int_t NA, sim_out **out, void *ptr)
+char *assign_sim_out(int_t nx, int_t nu, int_t NF, sim_out **out, void *ptr)
 {
 
 char *c_ptr = (char *) ptr;
@@ -109,7 +108,7 @@ c_ptr += nx*sizeof(real_t);
 c_ptr += nx * NF *sizeof(real_t);
 
 (*out)->S_adj = (real_t *) c_ptr;
-c_ptr += NA *sizeof(real_t);
+c_ptr += (nx + nu) *sizeof(real_t);
 
 (*out)->S_hess = (real_t *) c_ptr;
 c_ptr += ((NF + 1) * NF / 2) *sizeof(real_t);
@@ -117,15 +116,15 @@ c_ptr += ((NF + 1) * NF / 2) *sizeof(real_t);
 return c_ptr;
 }
 
-sim_out *create_sim_out(int_t nx, int_t nu, int_t NF, int_t NA) {
+sim_out *create_sim_out(int_t nx, int_t nu, int_t NF) {
 
 sim_out *out;
 
-int_t bytes = sim_out_calculate_size(nx, nu, NF, NA);
+int_t bytes = sim_out_calculate_size(nx, nu, NF);
 
 void *ptr = malloc(bytes);
 
-char *ptr_end = assign_sim_out(nx, nu, NF, NA, &out, ptr);
+char *ptr_end = assign_sim_out(nx, nu, NF, &out, ptr);
 assert((char*)ptr + bytes >= ptr_end); (void) ptr_end;
 
 return out;

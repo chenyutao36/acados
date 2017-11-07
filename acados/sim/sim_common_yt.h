@@ -29,7 +29,7 @@ typedef struct {
     int_t nx;   // NX
     int_t nu;   // NU
     int_t NF;   // NO. of forward sens
-    int_t NA;   // No. of adjoint sens
+
     // int_t nz;   // ALGEBRAIC VARIABLES: currently only internal, similar to ACADO code generation
     real_t *x;  // x[NX]
     real_t *u;  // u[NU]
@@ -46,13 +46,16 @@ typedef struct {
 
     casadi_function_t adj;
     void (*VDE_adj)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
-    casadi_function_t jac;
-    void (*jac_fun)(int, double *, double *, casadi_function_t);
+    
+    // casadi_function_t jac;
+    // void (*jac_fun)(int, double *, double *, casadi_function_t);
+
+    casadi_function_t hess;
+    void (*Hess_fun)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
 
     real_t step;
     int_t num_steps;
 
-    // real_t *grad_K;  // gradient correction
 } sim_in;
 
 typedef struct {
@@ -67,25 +70,14 @@ typedef struct {
     double *S_adj;   //
     double *S_hess;  //
 
-    // real_t *grad;  // gradient correction
-
     sim_info *info;
 } sim_out;
 
-// typedef struct {
-//     int_t (*fun)(const sim_in *, sim_out *, void *, void *, void *);
-//     sim_in *in;
-//     sim_out *out;
-//     void *args;
-//     void *mem;
-//     void *work;
-// } sim_solver;
+int_t sim_in_calculate_size(int_t nx, int_t nu, int_t NF);
+char *assign_sim_in(int_t nx, int_t nu, int_t NF, sim_in **in, void *ptr);
+sim_in *create_sim_in(int_t nx, int_t nu, int_t NF);
 
-int_t sim_in_calculate_size(int_t nx, int_t nu, int_t NF, int_t NA);
-char *assign_sim_in(int_t nx, int_t nu, int_t NF, int_t NA, sim_in **in, void *ptr);
-sim_in *create_sim_in(int_t nx, int_t nu, int_t NF, int_t NA);
-
-int_t sim_out_calculate_size(int_t nx, int_t nu, int_t NF, int_t NA);
-char *assign_sim_out(int_t nx, int_t nu, int_t NF, int_t NA, sim_out **out, void *ptr);
-sim_out *create_sim_out(int_t nx, int_t nu, int_t NF, int_t NA);
-#endif  // ACADOS_SIM_SIM_COMMON_H_
+int_t sim_out_calculate_size(int_t nx, int_t nu, int_t NF);
+char *assign_sim_out(int_t nx, int_t nu, int_t NF, sim_out **out, void *ptr);
+sim_out *create_sim_out(int_t nx, int_t nu, int_t NF);
+#endif  // ACADOS_SIM_SIM_YT_COMMON_H_
