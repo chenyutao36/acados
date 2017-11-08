@@ -47,7 +47,7 @@ char *assign_erk_memory(sim_RK_opts *opts, sim_in *in, sim_erk_memory **memory, 
 
 sim_erk_memory *sim_erk_create_memory(sim_RK_opts *opts, sim_in *in);
 
-int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts, void *mem);
+int_t sim_erk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_);
 
 // int_t sim_erk_calculate_workspace_size(const sim_in *in, void *args);
 

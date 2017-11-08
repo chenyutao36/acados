@@ -53,6 +53,12 @@ typedef struct {
     casadi_function_t hess;
     void (*Hess_fun)(const int_t, const int_t, const real_t *, real_t *, casadi_function_t);
 
+    casadi_function_t impl_ode;
+    void (*impl_ode_fun)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
+
+    casadi_function_t impl_ode_jac;
+    void (*impl_ode_jac_fun)(const int, const int, const double *, double *, casadi_function_t); // function pointer to residuals of implicit ode
+
     real_t step;
     int_t num_steps;
 

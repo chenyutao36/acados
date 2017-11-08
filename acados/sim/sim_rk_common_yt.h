@@ -20,16 +20,14 @@
 #ifndef ACADOS_SIM_SIM_RK_COMMON_YT_H_
 #define ACADOS_SIM_SIM_RK_COMMON_YT_H_
 
-// #include "acados/sim/sim_common.h"
 #include "acados/utils/types.h"
 
 typedef struct {
     int num_stages;
+    int newton_iter;
     double *A_mat;
     double *c_vec;
-    double *b_vec;
-
-    // Newton_scheme scheme;
+    double *b_vec;  
 } sim_RK_opts;
 
 int_t sim_RK_opts_calculate_size(int_t ns);
@@ -38,4 +36,4 @@ char *assign_sim_RK_opts(int_t ns, sim_RK_opts **opts, void *ptr);
 
 sim_RK_opts *create_sim_RK_opts(int_t ns);
 
-#endif  // ACADOS_SIM_SIM_RK_COMMON_H_
+#endif  // ACADOS_SIM_SIM_RK_COMMON_YT_H_
