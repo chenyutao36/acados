@@ -37,6 +37,10 @@ void adj_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casa
 
 void hess_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t hess);
 
+void impl_ode_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_ode);
+
+void impl_jac_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_jac);
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

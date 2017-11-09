@@ -132,3 +132,49 @@ void hess_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, cas
 
     hess(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }
+
+void impl_ode_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_ode){
+    const double *x = in;
+    const double *xdot = in + nx;
+    const double *u = in + 2 * nx;
+
+    double *res = out;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[3];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = xdot;
+    casadi_arg[2] = u;
+
+    casadi_res[0] = res;
+
+    impl_ode(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}
+
+void impl_jac_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out, casadi_function_t impl_jac){
+    const double *x = in;
+    const double *xdot = in + nx;
+    const double *u = in + 2 * nx;
+
+    double *jac = out;
+
+    int casadi_mem = 0;
+    int *casadi_iw = NULL;
+    double *casadi_w = NULL;
+
+    const double *casadi_arg[3];
+    double *casadi_res[1];
+
+    casadi_arg[0] = x;
+    casadi_arg[1] = xdot;
+    casadi_arg[2] = u;
+
+    casadi_res[0] = jac;
+
+    impl_jac(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
+}

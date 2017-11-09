@@ -34,11 +34,11 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/pathconN_*)
 
 file(GLOB YUTAO_MODEL_SRC
-    # chain_model/vde_chain_nm2.c
-    # chain_model/vde_chain_nm9.c
     yutao_model/vde_forw_model.c
     yutao_model/vde_adj_model.c
     yutao_model/vde_hess_model.c
+    yutao_model/impl_ode.c
+    yutao_model/impl_jac.c
     )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)

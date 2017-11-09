@@ -5,14 +5,13 @@
 #include "acados/sim/sim_common_yt.h"
 #include "acados/sim/sim_rk_common_yt.h"
 #include "acados/sim/sim_erk_integrator_yt.h"
+#include "acados/sim/sim_irk_integrator_yt.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 
-// #include "include/sim/sim_lifted_irk_integrator.h"
 #include "acados/utils/print.h"
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-// #include "examples/c/chain_model/chain_model.h"
 #include "examples/c/yutao_model/yutao_model.h"
 
 // blasfeo
@@ -25,53 +24,53 @@
 
 int main() {
 
-    int ii,jj;
+    int ii;
+    // int jj;
     
     int nx = 4;
     int nu = 1;
     int NF = nx + nu; // columns of forward seed
-    int nX = nx *(1+NF);
+    // int nX = nx *(1+NF);
 
     double T = 0.05;
-    int num_stages = 4;
+    // int num_stages = 4;
     double *xref;
     xref = (double*)calloc(nx, sizeof(double));
     xref[1] = 3.14;
 
-    double A_rk[] = {0.0, 0.5, 0.0, 0.0,
-        0.0, 0.0, 0.5, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 0.0, 0.0};
-    double B_rk[] = {1.0/6.0, 1.0/3.0, 1.0/3.0, 1.0/6.0};
-    double C_rk[] = {0.0, 0.5, 0.5, 0.0};
+    // double A_rk[] = {0.0, 0.5, 0.0, 0.0,
+    //     0.0, 0.0, 0.5, 0.0,
+    //     0.0, 0.0, 0.0, 1.0,
+    //     0.0, 0.0, 0.0, 0.0};
+    // double B_rk[] = {1.0/6.0, 1.0/3.0, 1.0/3.0, 1.0/6.0};
+    // double C_rk[] = {0.0, 0.5, 0.5, 0.0};
 
-    sim_RK_opts *rk_opts = create_sim_RK_opts(num_stages);
-    rk_opts->num_stages = num_stages;
+    // sim_RK_opts *rk_opts = create_sim_RK_opts(num_stages);
 
-    for (ii=0;ii<num_stages*num_stages;ii++){
-        rk_opts->A_mat[ii] = A_rk[ii];
-    }
-    for (ii=0;ii<num_stages;ii++){
-        rk_opts->b_vec[ii] = B_rk[ii];
-        rk_opts->c_vec[ii] = C_rk[ii];
-    }
+    // for (ii=0;ii<num_stages*num_stages;ii++){
+    //     rk_opts->A_mat[ii] = A_rk[ii];
+    // }
+    // for (ii=0;ii<num_stages;ii++){
+    //     rk_opts->b_vec[ii] = B_rk[ii];
+    //     rk_opts->c_vec[ii] = C_rk[ii];
+    // }
 
     sim_in *in = create_sim_in(nx, nu ,NF);
 
     in->num_steps = 4;
     in->step = T / in->num_steps;
-    in->sens_forw = true;
-    in->sens_adj = true;
-    in->sens_hess = false;
+    // in->sens_forw = true;
+    // in->sens_adj = true;
+    // in->sens_hess = false;
 
-    in->vde = & vdeFun;
-    in->adj = & adjFun;
-    in->VDE_forw = &vde_fun;
-    in->VDE_adj = &adj_fun;
-    in->hess = &hessFun;
-    in->Hess_fun = hess_fun;
+    // in->vde = & vdeFun;
+    // in->adj = & adjFun;
+    // in->VDE_forw = &vde_fun;
+    // in->VDE_adj = &adj_fun;
+    // in->hess = &hessFun;
+    // in->Hess_fun = hess_fun;
 
-    printf("\nnx=%d nu=%d NF=%d nX=%d \n",in->nx, in->nu, in->NF, nX);
+    // printf("\nnx=%d nu=%d NF=%d nX=%d \n",in->nx, in->nu, in->NF, nX);
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
@@ -81,24 +80,112 @@ int main() {
     }
 
 
-    printf("\nx0:\n");
-    for (ii = 0; ii < nx; ii++)
-        printf("%8.5f ",in->x[ii]);
-    printf("\n");
+    // printf("\nx0:\n");
+    // for (ii = 0; ii < nx; ii++)
+    //     printf("%8.5f ",in->x[ii]);
+    // printf("\n");
 
-    for (ii = 0; ii < nx * NF; ii++)
-        in->S_forw[ii] = 0.0;
-    for (ii = 0; ii < nx; ii++)
-        in->S_forw[ii * (nx + 1)] = 1.0;
+    // for (ii = 0; ii < nx * NF; ii++)
+    //     in->S_forw[ii] = 0.0;
+    // for (ii = 0; ii < nx; ii++)
+    //     in->S_forw[ii * (nx + 1)] = 1.0;
 
-    for (ii = 0; ii < nx; ii++)
-        in->S_adj[ii] = 1.0;
+    // for (ii = 0; ii < nx; ii++)
+    //     in->S_adj[ii] = 1.0;
 
-    sim_erk_memory *erk_mem = sim_erk_create_memory(rk_opts, in);
+    // sim_erk_memory *erk_mem = sim_erk_create_memory(rk_opts, in);
 
     sim_out *out = create_sim_out(nx, nu, NF);
     
-    int flag = sim_erk_yt(in, out, rk_opts, erk_mem);
+    // int flag = sim_erk_yt(in, out, rk_opts, erk_mem);
+
+    // double *xn = out->xn;
+
+    // printf("\nxn: \n");
+    // for (ii=0;ii<nx;ii++)
+    //     printf("%8.5f ",xn[ii]);
+    // printf("\n");
+
+    // double *S_forw_out = out->S_forw;  
+    // printf("\nS_forw_out: \n");
+    // for (ii=0;ii<nx;ii++){
+    //     for (jj=0;jj<NF;jj++)
+    //         printf("%8.5f ",S_forw_out[jj*nx+ii]);
+    //     printf("\n");
+    // }
+     
+    // double *S_adj_out = out->S_adj;
+    // printf("\nS_adj_out: \n");
+    // for (ii=0;ii<nx+nu;ii++){
+    //     printf("%8.5f ",S_adj_out[ii]);
+    // }
+    // printf("\n"); 
+ 
+    // double zero = 0.0;
+    // if(in->sens_hess){ 
+    //     double *S_hess_out = out->S_hess;
+    //     printf("\nS_hess_out: \n");
+    //     for (ii=0;ii<NF;ii++){
+    //         for (jj=0;jj<NF;jj++){
+    //             if (jj>ii){
+    //                 printf("%8.5f ",zero);
+    //             }else{
+    //                 printf("%8.5f ",S_hess_out[jj*NF+ii]);
+    //             }
+    //         }
+    //         printf("\n");
+    //     }
+    // }
+
+
+    // printf("\n");
+    // printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
+    // printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
+
+    // struct d_strmat sA;
+    // d_create_strmat(nx, nx+nu, &sA, S_forw_out);
+
+    // struct d_strvec sx;
+    // d_create_strvec(nx, &sx, in->S_adj);
+
+    // struct d_strvec sz;
+    // void *mz; 
+    // v_zeros_align(&mz, d_size_strvec(nx+nu));
+    // d_create_strvec(nx+nu, &sz, mz);
+    // dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
+    
+    // printf("\nJac times lambdaX:\n");
+    // d_print_tran_strvec(nx+nu, &sz, 0);
+
+    // 
+
+    double A_impl[] = {0.1389, 0.3003, 0.2680 ,
+        -0.0360, 0.2222, 0.4804,
+        0.0098, -0.0225, 0.1389};
+    double B_impl[] = {0.2778, 0.4444, 0.2778};
+    // double C_impl[] = {0.0, 0.5, 0.5, 0.0};
+
+    int num_stages = 3;
+    sim_RK_opts *irk_opts = create_sim_RK_opts(num_stages);
+    irk_opts->newton_iter = 3;
+
+    for (ii=0;ii<num_stages*num_stages;ii++){
+        irk_opts->A_mat[ii] = A_impl[ii];
+    }
+    for (ii=0;ii<num_stages;ii++){
+        irk_opts->b_vec[ii] = B_impl[ii];
+        // irk_opts->c_vec[ii] = C_impl[ii];
+    }
+    
+    in->impl_ode = &impl_odeFun;
+    in->eval_impl_res = &impl_ode_fun;
+    
+    in->impl_jac = &impl_jacFun;
+    in->eval_impl_jac = &impl_jac_fun;
+
+    sim_irk_memory *irk_mem = sim_irk_create_memory(irk_opts, in);
+
+    int flag = sim_irk_yt(in, out, irk_opts, irk_mem);
 
     double *xn = out->xn;
 
@@ -106,65 +193,18 @@ int main() {
     for (ii=0;ii<nx;ii++)
         printf("%8.5f ",xn[ii]);
     printf("\n");
-
-    double *S_forw_out = out->S_forw;  
-    printf("\nS_forw_out: \n");
-    for (ii=0;ii<nx;ii++){
-        for (jj=0;jj<NF;jj++)
-            printf("%8.5f ",S_forw_out[jj*nx+ii]);
-        printf("\n");
-    }
-     
-    double *S_adj_out = out->S_adj;
-    printf("\nS_adj_out: \n");
-    for (ii=0;ii<nx+nu;ii++){
-        printf("%8.5f ",S_adj_out[ii]);
-    }
-    printf("\n"); 
- 
-    double zero = 0.0;
-    if(in->sens_hess){ 
-        double *S_hess_out = out->S_hess;
-        printf("\nS_hess_out: \n");
-        for (ii=0;ii<NF;ii++){
-            for (jj=0;jj<NF;jj++){
-                if (jj>ii){
-                    printf("%8.5f ",zero);
-                }else{
-                    printf("%8.5f ",S_hess_out[jj*NF+ii]);
-                }
-            }
-            printf("\n");
-        }
-    }
-
-
+    
     printf("\n");
     printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
-
-    struct d_strmat sA;
-    d_create_strmat(nx, nx+nu, &sA, S_forw_out);
-
-    struct d_strvec sx;
-    d_create_strvec(nx, &sx, in->S_adj);
-
-    struct d_strvec sz;
-    void *mz; 
-    v_zeros_align(&mz, d_size_strvec(nx+nu));
-    d_create_strvec(nx+nu, &sz, mz);
-    dgemv_t_libstr(nx, nx+nu, 1.0, &sA, 0, 0, &sx, 0, 0.0, &sz, 0, &sz, 0);
-    
-    printf("\nJac times lambdaX:\n");
-    d_print_tran_strvec(nx+nu, &sz, 0);
 
     free(xref);
-    free(rk_opts);
+    // free(rk_opts);
     free(in);
-    free(erk_mem);
+    free(irk_opts);
+    // free(erk_mem);
     free(out);
-   
-    v_free_align(mz);
+    // v_free_align(mz);
+    free(irk_mem);
     
     return flag;
 }

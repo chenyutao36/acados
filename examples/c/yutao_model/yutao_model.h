@@ -10,6 +10,8 @@ extern "C" {
 int vdeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int adjFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 int hessFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int impl_odeFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
+int impl_jacFun(const real_t** arg, real_t** res, int* iw, real_t* w, int mem);
 
 #ifdef __cplusplus
 } /* extern "C" */
