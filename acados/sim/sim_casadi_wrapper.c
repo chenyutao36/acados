@@ -147,11 +147,12 @@ void impl_ode_fun(const int_t nx, const int_t nu, const real_t *in, real_t *out,
     const double *casadi_arg[3];
     double *casadi_res[1];
 
+
     casadi_arg[0] = x;
     casadi_arg[1] = xdot;
     casadi_arg[2] = u;
 
-    casadi_res[0] = res;
+    casadi_res[0] = res;  
 
     impl_ode(casadi_arg, casadi_res, casadi_iw, casadi_w, casadi_mem);
 }

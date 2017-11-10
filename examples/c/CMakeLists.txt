@@ -103,10 +103,15 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 
     # add my onw examples
-    add_executable(sim_standalone_example
-        sim_standalone.c ${YUTAO_MODEL_SRC})
-    target_link_libraries(sim_standalone_example acados)
-    add_test(sim_standalone_example sim_standalone_example)
+    add_executable(sim_erk_standalone_example
+        sim_erk_standalone.c ${YUTAO_MODEL_SRC})
+    target_link_libraries(sim_erk_standalone_example acados)
+    add_test(sim_erk_standalone_example sim_erk_standalone_example)
+
+    add_executable(sim_irk_standalone_example
+    sim_irk_standalone.c ${YUTAO_MODEL_SRC})
+    target_link_libraries(sim_irk_standalone_example acados)
+    add_test(sim_irk_standalone_example sim_irk_standalone_example)
 
     # add old integrator examples
     # add_executable(sim_standalone_old_example
