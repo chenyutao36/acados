@@ -13,16 +13,18 @@ extern "C" {
 #include "external/blasfeo/include/blasfeo_common.h"
 
 typedef struct {
-    struct d_strmat *JG; // jacobian of G (nx*ns, nx*ns)
+    struct d_strmat *JG; // jacobian of G over K (nx*ns, nx*ns)
     struct d_strmat *rG; // residuals of G (nx*ns, 1)
     struct d_strmat *K; // internal variables (nx*ns, 1)
+    struct d_strmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
+    struct d_strmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
     double *xt0; // temporary states (nx)
-    double *xt1; // temporary states (nx)
     double *kt; // temporary internal variables (nx, 1)
     double *rGt; // temporary residuals of G (nx, 1)
-    double *jac_out; // temporary Jacobian of ode (nx, 2*nx)
+    double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
     double *Jt; // temporary Jacobian of ode (nx, nx)
     double *ode_args; // pointer to ode args
+    double *JFK; // jacobian of F over K
     int *ipiv; // index of pivot vector
 }sim_irk_memory;
 

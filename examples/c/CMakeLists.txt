@@ -38,7 +38,9 @@ file(GLOB YUTAO_MODEL_SRC
     yutao_model/vde_adj_model.c
     yutao_model/vde_hess_model.c
     yutao_model/impl_ode.c
-    yutao_model/impl_jac.c
+    yutao_model/impl_jac_x.c
+    yutao_model/impl_jac_xdot.c
+    yutao_model/impl_jac_u.c
     )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)

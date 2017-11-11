@@ -27,7 +27,7 @@
 
 int main() {
     int ii;
-    // int jj;
+    int jj;
     
     int nx = 4;
     int nu = 1;
@@ -45,8 +45,12 @@ int main() {
     in->step = T / in->num_steps;
     in->impl_ode = &impl_odeFun;
     in->eval_impl_res = &impl_ode_fun;
-    in->impl_jac = &impl_jacFun;
-    in->eval_impl_jac = &impl_jac_fun;
+    in->impl_jac_x = &impl_jacFun_x;
+    in->eval_impl_jac_x = &impl_jac_x_fun;
+    in->impl_jac_xdot = &impl_jacFun_xdot;
+    in->eval_impl_jac_xdot = &impl_jac_xdot_fun;
+    in->impl_jac_u = &impl_jacFun_u;
+    in->eval_impl_jac_u = &impl_jac_u_fun;
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
@@ -54,6 +58,11 @@ int main() {
     for (ii = 0;ii < nu; ii++){
         in->u[ii] = 1.0;
     }
+
+    for (ii = 0; ii < nx * NF; ii++)
+        in->S_forw[ii] = 0.0;
+    for (ii = 0; ii < nx; ii++)
+        in->S_forw[ii * (nx + 1)] = 1.0;
 
     double A_impl[] = {0.1389, 0.3003, 0.2680 ,
         -0.0360, 0.2222, 0.4804,
@@ -80,14 +89,22 @@ int main() {
     int flag = sim_irk_yt(in, out, irk_opts, irk_mem);
 
     double *xn = out->xn;
+    double *S_forw_out = out->S_forw;
 
     printf("\nxn: \n");
     for (ii=0;ii<nx;ii++)
         printf("%8.5f ",xn[ii]);
     printf("\n");
+
+    printf("\nS_forw_out: \n");
+    for (ii=0;ii<nx;ii++){
+        for (jj=0;jj<NF;jj++)
+            printf("%8.5f ",S_forw_out[jj*nx+ii]);
+        printf("\n");
+    }
     
     printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
+    printf("cpt: %8.4f [ms]\n", out->info->CPUtime*1000);
 
     free(xref);
     free(in);
