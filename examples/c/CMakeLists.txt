@@ -28,10 +28,18 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_chain_nm2.c
     chain_model/vde_chain_nm3.c
     chain_model/vde_chain_nm4.c
-    chain_model/ls_cost_*
-    chain_model/ls_costN_*
-    chain_model/pathcon_*
-    chain_model/pathconN_*)
+    chain_model/jac_chain_nm5.c
+    chain_model/jac_chain_nm6.c
+    chain_model/jac_chain_nm7.c
+    chain_model/vde_chain_nm5.c
+    chain_model/vde_chain_nm6.c
+    chain_model/vde_chain_nm7.c
+    chain_model/jac_chain_nm8.c
+    chain_model/vde_chain_nm8.c
+    chain_model/jac_chain_nm9.c
+    chain_model/vde_chain_nm9.c
+    chain_model/jac_chain_nm10.c
+    chain_model/vde_chain_nm10.c)
 
 file(GLOB YUTAO_MODEL_SRC
     yutao_model/vde_forw_model.c
@@ -141,12 +149,8 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
 endif()
 
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-    add_executable(discrete_model
-        discrete_model.c
-        discrete_model/discrete_model.c
-        discrete_model/discrete_model_cost.c
-        discrete_model/discrete_model_costN.c
-        )
-    target_link_libraries(discrete_model acados)
-    add_test(discrete_model discrete_model)
+    add_executable(mass_spring_condensing mass_spring_condensing.c)
+    target_link_libraries(mass_spring_condensing acados)
+    target_compile_definitions(mass_spring_condensing PRIVATE USE_ACADOS_TYPES)
+    add_test(mass_spring_condensing mass_spring_condensing)
 endif()

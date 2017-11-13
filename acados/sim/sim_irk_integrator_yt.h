@@ -14,8 +14,8 @@ extern "C" {
 
 typedef struct {
     struct d_strmat *JG; // jacobian of G over K (nx*ns, nx*ns)
-    struct d_strmat *rG; // residuals of G (nx*ns, 1)
-    struct d_strmat *K; // internal variables (nx*ns, 1)
+    struct d_strvec *rG; // residuals of G (nx*ns, 1)
+    struct d_strvec *K; // internal variables (nx*ns, 1)
     struct d_strmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
     struct d_strmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
     double *xt0; // temporary states (nx)

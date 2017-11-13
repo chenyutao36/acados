@@ -298,6 +298,8 @@ char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const i
 
     // NOTE(dimitris): splitted the loops below to be able to print primal/dual solution at once
 
+    char *c_ptr_QPdata = c_ptr;
+
     // assign pointers to QP solution
     for (int_t k = 0; k < N+1; k++) {
         assert((size_t)c_ptr % 8 == 0);
@@ -320,6 +322,10 @@ char *assign_ocp_qp_out(const int_t N, const int_t *nx, const int_t *nu, const i
         (*qp_out)->lam[k] = (real_t *) c_ptr;
         c_ptr += 2*(nb[k] + nc[k])*sizeof(real_t);
     }
+
+    for (char *idx = c_ptr_QPdata; idx < c_ptr; idx++)
+    *idx = 0;
+
     return c_ptr;
 }
 

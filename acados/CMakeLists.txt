@@ -68,9 +68,9 @@ if(ACADOS_WITH_OOQP)
 endif()
 
 # Enable or disable timings
-if(NOT ACADOS_NO_TIMINGS)
+#if(ACADOS_MEASURE_TIMINGS)
     target_compile_definitions(acados PUBLIC MEASURE_TIMINGS)
-endif()
+#endif()
 
 # Only test acados library for coverage
 if(COVERAGE MATCHES "lcov")
