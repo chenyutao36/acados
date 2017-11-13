@@ -14,18 +14,21 @@ extern "C" {
 
 typedef struct {
     struct d_strmat *JG; // jacobian of G over K (nx*ns, nx*ns)
-    struct d_strvec *rG; // residuals of G (nx*ns, 1)
-    struct d_strvec *K; // internal variables (nx*ns, 1)
     struct d_strmat *JGf; // jacobian of G over x and u (nx*ns, nx+nu);
     struct d_strmat *JKf; // jacobian of K over x and u (nx*ns, nx+nu);
-    double *xt0; // temporary states (nx)
-    double *kt; // temporary internal variables (nx, 1)
+    struct d_strmat *JFK; // jacobian of F over K (nx, nx*ns) 
+    struct d_strmat *S_forw; // forward sensitivities
+
+    struct d_strvec *xt; // temporary x
+    struct d_strvec *xn; // x at each integration step
+    struct d_strvec *rG; // residuals of G (nx*ns, 1)
+    struct d_strvec *K; // internal variables (nx*ns, 1)
+    
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
     double *Jt; // temporary Jacobian of ode (nx, nx)
     double *ode_args; // pointer to ode args
-    double *JFK; // jacobian of F over K
-    int *ipiv; // index of pivot vector
+    int *ipiv; // index of pivot vector// jacobian of G over x and u (nx*ns, nx+nu);
 }sim_irk_memory;
 
 int irk_calculate_memory_size(sim_RK_opts *opts, sim_in *in);

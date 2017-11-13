@@ -32,7 +32,6 @@ int main() {
     int nx = 4;
     int nu = 1;
     int NF = nx + nu; // columns of forward seed
-    // int nX = nx *(1+NF);
 
     double T = 0.05;
     double *xref;
@@ -51,6 +50,8 @@ int main() {
     in->eval_impl_jac_xdot = &impl_jac_xdot_fun;
     in->impl_jac_u = &impl_jacFun_u;
     in->eval_impl_jac_u = &impl_jac_u_fun;
+
+    in->sens_forw = true;
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];
