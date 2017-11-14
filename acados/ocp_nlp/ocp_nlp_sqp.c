@@ -127,15 +127,13 @@ void prepare_qp(const ocp_nlp_in *nlp_in, ocp_nlp_sqp_args *sqp_args,
 
     // Path constraints
     for (int_t i = 0; i <= N; i++) {
-        for (int_t j = 0; i < ng[i]; j++) {
+        for (int_t j = 0; j < ng[i]; j++) {
             qp_lc[i][j] = nlp_lg[i][j] - g[i][j];
             qp_uc[i][j] = nlp_ug[i][j] - g[i][j];
-            for (int_t k = 0; i < nx[i]; k++) {
-                qp_Cx[i][k * nx[i] + j] = jac_g[i][k * nx[i] + j];
-            }
-            for (int_t k = 0; i < nu[i]; k++) {
-                qp_Cu[i][k * nx[i] + j] = jac_g[i][(nx[i] + k) * nx[i] + j];
-            }
+            for (int_t k = 0; k < nx[i]; k++)
+                qp_Cx[i][k * ng[i] + j] = jac_g[i][k * ng[i] + j];
+            for (int_t k = 0; k < nu[i]; k++)
+                qp_Cu[i][k * ng[i] + j] = jac_g[i][(nx[i] + k) * ng[i] + j];
         }
     }
 }
@@ -316,19 +314,19 @@ int_t ocp_nlp_sqp(const ocp_nlp_in *nlp_in, ocp_nlp_out *nlp_out, void *args_,
         update_variables(nlp_in, sqp_args, sqp_mem);
 
         // TODO(nielsvd): debug, remove... Norm of step-size
-        real_t norm_step = 0;
-        for (int_t i = 0; i <= nlp_in->N; i++) {
-            for (int_t j = 0; j < nlp_in->nx[i]; j++) {
-                norm_step += (sqp_args->qp_solver->qp_out->x[i][j]) *
-                             (sqp_args->qp_solver->qp_out->x[i][j]);
-            }
-            for (int_t j = 0; j < nlp_in->nu[i]; j++) {
-                norm_step += (sqp_args->qp_solver->qp_out->u[i][j]) *
-                             (sqp_args->qp_solver->qp_out->u[i][j]);
-            }
-        }
-        norm_step = sqrt(norm_step);
-        printf("Norm_step = %.10e\n", norm_step);
+        // real_t norm_step = 0;
+        // for (int_t i = 0; i <= nlp_in->N; i++) {
+        //     for (int_t j = 0; j < nlp_in->nx[i]; j++) {
+        //         norm_step += (sqp_args->qp_solver->qp_out->x[i][j]) *
+        //                      (sqp_args->qp_solver->qp_out->x[i][j]);
+        //     }
+        //     for (int_t j = 0; j < nlp_in->nu[i]; j++) {
+        //         norm_step += (sqp_args->qp_solver->qp_out->u[i][j]) *
+        //                      (sqp_args->qp_solver->qp_out->u[i][j]);
+        //     }
+        // }
+        // norm_step = sqrt(norm_step);
+        // printf("Norm_step = %.10e\n", norm_step);
     }
 
     // Post-process solution

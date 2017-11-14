@@ -1,12 +1,12 @@
 include(ExternalProject)
 
-find_package(OpenBLAS REQUIRED)
-add_library(openblas UNKNOWN IMPORTED)
-set_property(TARGET openblas PROPERTY IMPORTED_LOCATION ${OpenBLAS_LIB})
-
 find_package(FortranLibs REQUIRED)
 add_library(gfortran UNKNOWN IMPORTED)
 set_property(TARGET gfortran PROPERTY IMPORTED_LOCATION ${FORTRAN_LIBRARY})
+
+find_package(BLAS REQUIRED)
+add_library(blas UNKNOWN IMPORTED)
+set_property(TARGET blas PROPERTY IMPORTED_LOCATION ${BLAS_LIBRARIES})
 
 include(external/ma27)
 
@@ -59,7 +59,7 @@ target_link_libraries(ooqp INTERFACE
     ooqpgondzio
     ooqpbase
     ma27
-    openblas
+    blas
     gfortran
     m)
 
@@ -77,7 +77,6 @@ install(EXPORT ooqpConfig DESTINATION cmake)
 
 install(FILES
         ${CMAKE_CURRENT_LIST_DIR}/../FindFortranLibs.cmake
-        ${CMAKE_CURRENT_LIST_DIR}/../FindOpenBLAS.cmake
     DESTINATION cmake)
 
 install(DIRECTORY ${BINARY_DIR}/include/
@@ -87,19 +86,23 @@ install(DIRECTORY ${BINARY_DIR}/include/
 add_library(ooqpgensparse STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpgensparse ooqp_project)
 set_property(TARGET ooqpgensparse PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgensparse.a")
+set_property(TARGET ooqpgensparse PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgensparse.a" DESTINATION lib)
 
 add_library(ooqpsparse STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpsparse ooqp_project)
 set_property(TARGET ooqpsparse PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpsparse.a")
+set_property(TARGET ooqpsparse PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpsparse.a" DESTINATION lib)
 
 add_library(ooqpgondzio STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpgondzio ooqp_project)
 set_property(TARGET ooqpgondzio PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgondzio.a")
+set_property(TARGET ooqpgondzio PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpgondzio.a" DESTINATION lib)
 
 add_library(ooqpbase STATIC IMPORTED GLOBAL)
 add_dependencies(ooqpbase ma27 ooqp_project)
 set_property(TARGET ooqpbase PROPERTY IMPORTED_LOCATION "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpbase.a")
+set_property(TARGET ooqpbase PROPERTY IMPORTED_LINK_INTERFACE_LANGUAGES CXX)
 install(FILES "${PROJECT_BINARY_DIR}/external/OOQP/lib/libooqpbase.a" DESTINATION lib)

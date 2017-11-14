@@ -75,14 +75,28 @@ static void free_ocp_nlp_in_bounds(ocp_nlp_in *const nlp) {
 }
 
 static void allocate_ocp_nlp_in_nonlinear_constraints(int_t N, int_t *ng, ocp_nlp_in *const nlp) {
+    memcpy((void *)nlp->ng, (void *)ng, sizeof(*ng) * (N + 1));
+    nlp->lg = (const real_t **) calloc(N + 1, sizeof(*nlp->lg));
+    nlp->ug = (const real_t **) calloc(N + 1, sizeof(*nlp->ug));
+    for (int_t i = 0; i <= N; i++) {
+        nlp->lg[i] = calloc(ng[i], sizeof(*nlp->lg[i]));
+        nlp->ug[i] = calloc(ng[i], sizeof(*nlp->ug[i]));
+    }
     nlp->path_constraints = (void **) malloc((N+1)*sizeof(ocp_nlp_function *));
 }
 
 static void free_ocp_nlp_in_nonlinear_constraints(ocp_nlp_in *const nlp) {
+    for (int_t i = 0; i <= nlp->N; i++) {
+        free((void *)nlp->lg[i]);
+        free((void *)nlp->ug[i]);
+    }
+    free(nlp->lg);
+    free(nlp->ug);
     free(nlp->path_constraints);
 }
 
-static void allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, ocp_nlp_in *const nlp) {
+static void allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, int_t num_stages,
+                                           ocp_nlp_in *const nlp) {
     nlp->sim = (void **)calloc(N, sizeof(sim_solver *));
     sim_solver **simulators = (sim_solver **) nlp->sim;
     for (int_t i = 0; i < N; i++) {
@@ -97,12 +111,13 @@ static void allocate_ocp_nlp_in_sim_solver(int_t N, int_t *nx, int_t *nu, ocp_nl
             simulators[i]->in->S_forw[j * (nx_i + 1)] = 1.0;
 
         d_zeros(&simulators[i]->in->S_adj, nx_i + nu_i, 1);
-        d_zeros(&simulators[i]->in->grad_K, nx_i, 1);
+        d_zeros(&simulators[i]->in->grad_K, nx_i * num_stages, 1);
 
         int_t nx_i1 = nx[i + 1];
         simulators[i]->out = (sim_out *)malloc(sizeof(sim_out));
         d_zeros(&simulators[i]->out->xn, nx_i1, 1);
         d_zeros(&simulators[i]->out->S_forw, nx_i1, nx_i + nu_i);
+        d_zeros(&simulators[i]->out->S_adj, nx_i + nu_i, 1);
         d_zeros(&simulators[i]->out->grad, nx_i + nu_i, 1);
         simulators[i]->out->info = (sim_info *)malloc(sizeof(sim_info));
 
@@ -131,11 +146,11 @@ static void free_ocp_nlp_in_sim_solver(ocp_nlp_in *const nlp) {
 }
 
 void allocate_ocp_nlp_in(int_t N, int_t *nx, int_t *nu, int_t *nb, int_t *ng,
-                         ocp_nlp_in *const nlp) {
+                         int_t num_integrator_stages, ocp_nlp_in *const nlp) {
     allocate_ocp_nlp_in_basic(N, nx, nu, nlp);
     allocate_ocp_nlp_in_bounds(N, nb, nlp);
     allocate_ocp_nlp_in_nonlinear_constraints(N, ng, nlp);
-    allocate_ocp_nlp_in_sim_solver(N, nx, nu, nlp);
+    allocate_ocp_nlp_in_sim_solver(N, nx, nu, num_integrator_stages, nlp);
 }
 
 void free_ocp_nlp_in(ocp_nlp_in *const nlp) {

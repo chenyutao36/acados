@@ -30,6 +30,11 @@ if(NOT CASADI_MATLAB_ROOT)
     message(FATAL_ERROR "Casadi not found!")
 endif()
 
+if(CMAKE_SYSTEM_NAME MATCHES "Windows")
+    list(APPEND CMAKE_FIND_LIBRARY_PREFIXES "lib")
+    list(APPEND CMAKE_FIND_LIBRARY_SUFFIXES ".dll")
+endif()
+
 # Find Casadi libraries
 find_library(CASADI_MATLAB_LIBRARY
     NAMES casadi
@@ -42,7 +47,8 @@ find_path(CASADI_MATLAB_INCLUDE_DIR
     NAMES casadi/casadi.hpp
     PATHS
         "${CASADI_MATLAB_ROOT}/include"
-        "${CASADI_MATLAB_ROOT}/../include")
+        "${CASADI_MATLAB_ROOT}/../include"
+        "${CASADI_PYTHON_ROOT}/casadi/include")
 
 # Determine the version number if not in cache
 if(NOT CASADI_MATLAB_MAJOR_VERSION)

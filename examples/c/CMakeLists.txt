@@ -28,58 +28,22 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_chain_nm2.c
     chain_model/vde_chain_nm3.c
     chain_model/vde_chain_nm4.c
-    chain_model/jac_chain_nm5.c
-    chain_model/jac_chain_nm6.c
-    chain_model/jac_chain_nm7.c
-    chain_model/vde_chain_nm5.c
-    chain_model/vde_chain_nm6.c
-    chain_model/vde_chain_nm7.c
-    chain_model/jac_chain_nm8.c
-    chain_model/vde_chain_nm8.c
-    chain_model/jac_chain_nm9.c
-    chain_model/vde_chain_nm9.c
-    chain_model/jac_chain_nm10.c
-    chain_model/vde_chain_nm10.c
-    
     chain_model/ls_cost_nm2.c
     chain_model/ls_cost_nm3.c
     chain_model/ls_cost_nm4.c
-    chain_model/ls_cost_nm5.c
-    chain_model/ls_cost_nm6.c
-    chain_model/ls_cost_nm7.c
-    chain_model/ls_cost_nm8.c
-    chain_model/ls_cost_nm9.c
-    chain_model/ls_cost_nm10.c
-
     chain_model/ls_costN_nm2.c
     chain_model/ls_costN_nm3.c
     chain_model/ls_costN_nm4.c
-    chain_model/ls_costN_nm5.c
-    chain_model/ls_costN_nm6.c
-    chain_model/ls_costN_nm7.c
-    chain_model/ls_costN_nm8.c
-    chain_model/ls_costN_nm9.c
-    chain_model/ls_costN_nm10.c
-    
     chain_model/pathcon_nm2.c
     chain_model/pathcon_nm3.c
     chain_model/pathcon_nm4.c
-    chain_model/pathcon_nm5.c
-    chain_model/pathcon_nm6.c
-    chain_model/pathcon_nm7.c
-    chain_model/pathcon_nm8.c
-    chain_model/pathcon_nm9.c
-    chain_model/pathcon_nm10.c
-    
     chain_model/pathconN_nm2.c
     chain_model/pathconN_nm3.c
     chain_model/pathconN_nm4.c
-    chain_model/pathconN_nm5.c
-    chain_model/pathconN_nm6.c
-    chain_model/pathconN_nm7.c
-    chain_model/pathconN_nm8.c
-    chain_model/pathconN_nm9.c
-    chain_model/pathconN_nm10.c)
+    chain_model/vde_hess_chain_nm2.c
+    chain_model/vde_hess_chain_nm3.c
+    chain_model/vde_hess_chain_nm4.c
+)
 
 file(GLOB YUTAO_MODEL_SRC
     yutao_model/vde_forw_model.c
@@ -89,7 +53,7 @@ file(GLOB YUTAO_MODEL_SRC
     yutao_model/impl_jac_x.c
     yutao_model/impl_jac_xdot.c
     yutao_model/impl_jac_u.c
-    )
+)
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
