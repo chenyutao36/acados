@@ -166,9 +166,6 @@ void print_ocp_qp(ocp_qp_in *qp) {
     printf("\n");
 }
 
-<<<<<<< HEAD
-
-=======
 void print_ocp_qp_to_file(ocp_qp_in *qp) {
     char filename[MAX_STR_LEN];
     for (int_t i = 0; i <= qp->N; i++) {
@@ -217,4 +214,3 @@ void print_ocp_qp_out(char *filename, ocp_qp_in *qp, ocp_qp_out *out) {
         print_matrix(filename, out->x[i], 2*qp->nb[i] + 2*qp->nc[i], 1);
     }
 }
->>>>>>> 4e14b6463f29d82a91de0a377066061b0bcdbb44
