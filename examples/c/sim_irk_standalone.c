@@ -52,6 +52,7 @@ int main() {
     in->eval_impl_jac_u = &impl_jac_u_fun;
 
     in->sens_forw = true;
+    in->sens_adj = false;
 
     for (ii = 0; ii < nx; ii++) {
         in->x[ii] = xref[ii];

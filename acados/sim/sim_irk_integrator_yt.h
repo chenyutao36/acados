@@ -19,10 +19,13 @@ typedef struct {
     struct d_strmat *JFK; // jacobian of F over K (nx, nx*ns) 
     struct d_strmat *S_forw; // forward sensitivities
 
+    struct d_strvec *rG; // residuals of G (nx*ns)
+    struct d_strvec *K; // internal variables (nx*ns)
     struct d_strvec *xt; // temporary x
     struct d_strvec *xn; // x at each integration step
-    struct d_strvec *rG; // residuals of G (nx*ns, 1)
-    struct d_strvec *K; // internal variables (nx*ns, 1)
+    
+    struct d_strvec *lambda; // adjoint seed (nx)
+    struct d_strvec *lambdaK; // auxiliary variable (nx*ns)
     
     double *rGt; // temporary residuals of G (nx, 1)
     double *jac_out; // temporary Jacobian of ode (nx, 2*nx+nu)
