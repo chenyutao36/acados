@@ -427,14 +427,16 @@ int sim_irk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_){
             dgetrf_libstr(nx*num_stages, nx*num_stages, JG, 0, 0, JG, 0, 0, ipiv);
 
             dgemv_t_libstr(nx, nx*num_stages, 1.0, JFK, 0, 0, lambda, 0, 0.0, lambda, 0, lambda, 0);
-        
-            dvecpe_libstr(nx*num_stages, ipiv, lambda, 0);
 
             dtrsv_lnn_libstr(nx*num_stages, JG, 0, 0, lambda, 0, lambda, 0);
 
             // neither is implemented
             // dtrsv_unu_libstr(nx*num_stages, JG, 0, 0, lambda, 0, lambda, 0);
             // dtrsv_ltu_libstr(nx*num_stages, JG, 0, 0, lambda, 0, lambda, 0);
+
+            dvecpei_libstr();
+
+            
         }
 
         // obtain x(n+1)
