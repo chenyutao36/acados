@@ -434,9 +434,9 @@ int sim_irk_yt(const sim_in *in, sim_out *out, void *opts_, void *mem_){
             // dtrsv_unu_libstr(nx*num_stages, JG, 0, 0, lambda, 0, lambda, 0);
             // dtrsv_ltu_libstr(nx*num_stages, JG, 0, 0, lambda, 0, lambda, 0);
 
-            dvecpei_libstr();
+            // dvecpei_libstr();
 
-            
+
         }
 
         // obtain x(n+1)
