@@ -2,9 +2,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "acados/sim/sim_common_new.h"
-#include "acados/sim/sim_rk_common_new.h"
-#include "acados/sim/sim_erk_integrator_new.h"
+#include "acados/sim/sim_common.h"
+#include "acados/sim/sim_rk_common.h"
+#include "acados/sim/sim_erk_integrator.h"
 #include "acados/sim/sim_casadi_wrapper.h"
 
 #include "acados/utils/print.h"
@@ -13,126 +13,77 @@
 
 #include "examples/c/crane_model/crane_model.h"
 
-
 #define M_PI 3.14159265358979323846
 
 int main() {
 
-    int ii, jj;
-    
-    int nx = 4;
-    int nu = 1;
-    int NF = nx + nu; // columns of forward seed
+    int NX = 4;
+    int NU = 1;
+    int d = 1;
 
-    double T = 0.05;
-    int num_stages = 4;
-    double *xref;
-    xref = (double*)calloc(nx, sizeof(double));
-    xref[1] = M_PI;
+    double Ts = 0.05;
+    sim_in sim_in;
+    sim_out sim_out;
+    sim_info info;
+    sim_RK_opts rk_opts;
+        
+    sim_in.num_steps = 4;
+    sim_in.step = Ts / sim_in.num_steps;
+    sim_in.nx = NX;
+    sim_in.nu = NU;
 
-    double A_rk[] = {0.0, 0.5, 0.0, 0.0,
-        0.0, 0.0, 0.5, 0.0,
-        0.0, 0.0, 0.0, 1.0,
-        0.0, 0.0, 0.0, 0.0};
-    double B_rk[] = {1.0/6.0, 1.0/3.0, 1.0/3.0, 1.0/6.0};
+    sim_in.sens_forw = true; // this has to be true
+    sim_in.sens_adj = false;
+    sim_in.sens_hess = false;
+    sim_in.num_forw_sens = NX+NU;
 
+    sim_in.vde = &vdeFun;
+    sim_in.forward_vde_wrapper = &vde_fun;
+    // sim_in.vde_adj = &adjFun;
+    // sim_in.adjoint_vde_wrapper = &vde_adj_fun;
 
-    sim_RK_opts *erk_opts = create_sim_RK_opts(num_stages);
+    sim_in.x = (double *)calloc( NX , sizeof(double) );
+    sim_in.u = (double *)calloc( NU, sizeof(double) );
+    sim_in.S_forw = (double *)calloc( NX * (NX + NU), sizeof(double) );
+    sim_in.S_adj =(double *)calloc( NX + NU, sizeof(double) );  
+    sim_in.grad_K = (double *)calloc(d * NX, sizeof(double) );
 
-    for (ii=0;ii<num_stages*num_stages;ii++){
-        erk_opts->A_mat[ii] = A_rk[ii];
-    }
-    for (ii=0;ii<num_stages;ii++){
-        erk_opts->b_vec[ii] = B_rk[ii];
-    }
+    sim_out.xn = (double *)calloc( NX , sizeof(double) );
+    sim_out.S_forw = (double *)calloc( NX * (NX + NU), sizeof(double) );
+    sim_out.info = &info;
 
-    sim_in *in = create_sim_in(nx, nu ,NF);
+    // initial state and control
+    sim_in.x[1] = M_PI;
+    for (int i=0;i <NU; i++) sim_in.u[i]=1.0;
 
-    in->num_steps = 4;
-    in->step = T / in->num_steps;
-    in->sens_forw = false;
-    in->sens_adj = false;
-    in->sens_hess = false;
+    // initial sensitivity seed
+    for (int i = 0; i < NX; i++)
+        sim_in.S_forw[i * (NX + 1)] = 1.0;
 
-    in->vde = & vdeFun;
-    in->VDE_forw = &vde_fun;
-    in->adj = & adjFun;
-    in->VDE_adj = &vde_adj_fun;
-    in->hess = &hessFun;
-    in->Hess_fun = &vde_hess_fun;
+    int workspace_size;
+    sim_erk_create_arguments(&rk_opts, 4);
+    workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
 
-    for (ii = 0; ii < nx; ii++) {
-        in->x[ii] = xref[ii];
-    }
-    for (ii = 0;ii < nu; ii++){
-        in->u[ii] = 1.0;
-    }
+    void *sim_work = (void *)malloc(workspace_size);
 
-    for (ii = 0; ii < nx * NF; ii++)
-        in->S_forw[ii] = 0.0;
-    for (ii = 0; ii < nx; ii++)
-        in->S_forw[ii * (nx + 1)] = 1.0;
+    sim_erk(&sim_in, &sim_out, &rk_opts, 0, sim_work);
 
-    for (ii = 0; ii < nx; ii++)
-        in->S_adj[ii] = 1.0;
-
-    sim_erk_memory *erk_mem = sim_erk_create_memory(erk_opts, in);
-
-    sim_out *out = create_sim_out(nx, nu, NF);
-    
-    int flag = sim_erk_new(in, out, erk_opts, erk_mem);
-
-    double *xn = out->xn;
+    double *xn = sim_out.xn;
 
     printf("\nxn: \n");
-    for (ii=0;ii<nx;ii++)
+    for (int ii=0;ii<NX;ii++)
         printf("%8.5f ",xn[ii]);
     printf("\n");
 
-    double *S_forw_out = out->S_forw;  
-    if (in->sens_forw){
-        printf("\nS_forw_out: \n");
-        for (ii=0;ii<nx;ii++){
-            for (jj=0;jj<NF;jj++)
-                printf("%8.5f ",S_forw_out[jj*nx+ii]);
-            printf("\n");
-        }
-    }
-     
-    if (in->sens_adj){
-        double *S_adj_out = out->S_adj;
-        printf("\nS_adj_out: \n");
-        for (ii=0;ii<nx+nu;ii++){
-            printf("%8.5f ",S_adj_out[ii]);
-        }
-        printf("\n"); 
-    }
+    // if you don't need sensitivities, just ignore 
+    // double *S_forw_out = sim_out.S_forw;  
+    // if (sim_in.sens_forw){
+    //     printf("\nS_forw_out: \n");
+    //     for (int ii=0;ii<NX;ii++){
+    //         for (int jj=0;jj<NX+NU;jj++)
+    //             printf("%8.5f ",S_forw_out[jj*NX+ii]);
+    //         printf("\n");
+    //     }
+    // }
 
-    double zero = 0.0;
-    if(in->sens_hess){ 
-        double *S_hess_out = out->S_hess;
-        printf("\nS_hess_out: \n");
-        for (ii=0;ii<NF;ii++){
-            for (jj=0;jj<NF;jj++){
-                if (jj>ii){
-                    printf("%8.5f ",zero);
-                }else{
-                    printf("%8.5f ",S_hess_out[jj*NF+ii]);
-                }
-            }
-            printf("\n");
-        }
-    }
-
-    printf("\n");
-    printf("cpt: %8.4f [ms]\n", out->info->CPUtime);
-    printf("AD cpt: %8.4f [ms]\n", out->info->ADtime);
-
-    free(xref);
-    free(erk_opts);
-    free(in);
-    free(erk_mem);
-    free(out);
-    
-    return flag;
 }
