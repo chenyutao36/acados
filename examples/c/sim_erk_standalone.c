@@ -11,23 +11,57 @@
 #include "acados/utils/timing.h"
 #include "acados/utils/types.h"
 
-#include "examples/c/crane_model/crane_model.h"
+#include "examples/c/chain_model/chain_model.h"
 
-#define M_PI 3.14159265358979323846
+#define NN 15
+#define TT 3.0
+#define Ns 2
+#define d 1
 
 int main() {
 
-    int NX = 4;
-    int NU = 1;
-    int d = 1;
+    const int NMF = 1; // range from 1 to 3
+    int nil;
+    FILE *refStates;
 
-    double Ts = 0.05;
+    int NX = 6 * NMF;
+    int NU = 3;
+    double *xref = (double *)malloc( NX * sizeof(double) );
+    switch (NMF) {
+        case 1:
+            refStates = fopen(XN_NM2_FILE, "r");
+            break;
+        case 2:
+            refStates = fopen(XN_NM3_FILE, "r");
+            break;
+        case 3:
+            refStates = fopen(XN_NM4_FILE, "r");
+            break;
+        default:
+            break;
+    }
+    for (int i = 0; i < NX; i++) {
+        nil = fscanf(refStates, "%lf", &xref[i]);
+    }
+
     sim_in sim_in;
-    sim_out sim_out;
-    sim_info info;
-    sim_RK_opts rk_opts;
-        
-    sim_in.num_steps = 4;
+    sim_in.forward_vde_wrapper = &vde_fun;
+    switch (NMF) {
+        case 1:
+            sim_in.vde = &vde_chain_nm2;             
+            break;
+        case 2:
+            sim_in.vde = &vde_chain_nm3;
+            break;
+        case 3:
+            sim_in.vde = &vde_chain_nm4;
+            break;
+        default:
+            break;
+    }
+       
+    sim_in.num_steps = Ns;
+    double Ts = TT / NN;
     sim_in.step = Ts / sim_in.num_steps;
     sim_in.nx = NX;
     sim_in.nu = NU;
@@ -37,30 +71,28 @@ int main() {
     sim_in.sens_hess = false;
     sim_in.num_forw_sens = NX+NU;
 
-    sim_in.vde = &vdeFun;
-    sim_in.forward_vde_wrapper = &vde_fun;
-    // sim_in.vde_adj = &adjFun;
-    // sim_in.adjoint_vde_wrapper = &vde_adj_fun;
-
-    sim_in.x = (double *)calloc( NX , sizeof(double) );
-    sim_in.u = (double *)calloc( NU, sizeof(double) );
+    sim_in.x = (double *)malloc( NX * sizeof(double) );
+    sim_in.u = (double *)malloc( NU * sizeof(double) );
     sim_in.S_forw = (double *)calloc( NX * (NX + NU), sizeof(double) );
     sim_in.S_adj =(double *)calloc( NX + NU, sizeof(double) );  
     sim_in.grad_K = (double *)calloc(d * NX, sizeof(double) );
 
+    sim_out sim_out;
+    sim_info info;
     sim_out.xn = (double *)calloc( NX , sizeof(double) );
     sim_out.S_forw = (double *)calloc( NX * (NX + NU), sizeof(double) );
     sim_out.info = &info;
 
     // initial state and control
-    sim_in.x[1] = M_PI;
-    for (int i=0;i <NU; i++) sim_in.u[i]=1.0;
+    for (int i=0;i <NX; i++) sim_in.x[i]=xref[i];
+    for (int i=0;i <NU; i++) sim_in.u[i]=0.0;
 
     // initial sensitivity seed
     for (int i = 0; i < NX; i++)
         sim_in.S_forw[i * (NX + 1)] = 1.0;
 
     int workspace_size;
+    sim_RK_opts rk_opts;
     sim_erk_create_arguments(&rk_opts, 4);
     workspace_size = sim_erk_calculate_workspace_size(&sim_in, &rk_opts);
 
@@ -85,5 +117,7 @@ int main() {
     //         printf("\n");
     //     }
     // }
+
+    return 0*nil;
 
 }

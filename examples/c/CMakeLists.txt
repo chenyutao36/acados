@@ -44,11 +44,10 @@ file(GLOB CHAIN_MODEL_SRC
     chain_model/vde_hess_chain_nm4.c
 )
 
-configure_file(crane_model/crane_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/crane_model/crane_model.h @ONLY)
-file(GLOB CRANE_MODEL_SRC
-    crane_model/vde_forw.c
-    crane_model/vde_adj.c
-    crane_model/vde_hess.c
+# configure_file(pendulum_model/crane_model.h.in ${CMAKE_CURRENT_SOURCE_DIR}/crane_model/crane_model.h @ONLY)
+file(GLOB PENDULUM_MODEL_SRC
+    pendulum_model/vde_forw_pendulum.c
+    pendulum_model/jac_pendulum.c
 )
 
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
@@ -114,7 +113,7 @@ if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
     add_test(nonlinear_chain_sqp_example nonlinear_chain_sqp_example)
 
     add_executable(sim_erk_standalone_example
-        sim_erk_standalone.c ${CRANE_MODEL_SRC})
+        sim_erk_standalone.c ${CHAIN_MODEL_SRC})
     target_link_libraries(sim_erk_standalone_example acados)
     add_test(sim_erk_standalone_example sim_erk_standalone_example)
 endif()
