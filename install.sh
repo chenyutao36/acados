@@ -45,6 +45,6 @@ popd # external
 # Build acados
 mkdir -p build
 pushd build
-cmake -D SWIG_MATLAB=1 -D SWIG_PYTHON=1 ..
+cmake -D SWIG_MATLAB=0 -D SWIG_PYTHON=1 ..
 make install
 popd # build

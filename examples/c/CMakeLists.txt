@@ -56,10 +56,18 @@ file(GLOB CHAIN_MODEL_SRC
     implicit_chain_model/impl_odeFun_chain_nm4.c
 )
 
+file(GLOB CRANE_MODEL_SRC
+    crane_model/impl_ode.c
+    crane_model/impl_jac_x.c
+    crane_model/impl_jac_u.c
+    crane_model/impl_jac_xdot.c
+)
+
 set(CHEN_MODEL_SRC chen_model/chen_model.c)
 file(GLOB PENDULUM_MODEL_SRC pendulum_model/pendulum_model.c
     pendulum_model/vde_forw_pendulum.c
     pendulum_model/jac_pendulum.c)
+
 
 # Define examples
 if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
@@ -146,3 +154,15 @@ endif()
 #     target_link_libraries(discrete_model acados)
 #     add_test(discrete_model discrete_model)
 # endif()
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+add_executable(mass_spring_pcond_example mass_spring_pcond_hpipm_split.c ${CHAIN_MODEL_SRC})
+    target_link_libraries(mass_spring_pcond_example acados)
+    add_test(mass_spring_pcond_example mass_spring_pcond_example)
+endif()
+
+if(NOT CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
+add_executable(sim_irk_example sim_irk_crane.c ${CRANE_MODEL_SRC})
+    target_link_libraries(sim_irk_example acados)
+    add_test(sim_irk_example sim_irk_example)
+endif()

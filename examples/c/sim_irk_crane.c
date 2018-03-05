@@ -33,7 +33,7 @@
 
 #define NO_C_INTERFACE
 
-
+#define M_PI 3.1415926525
 
 int main() {
 
@@ -43,7 +43,7 @@ int main() {
 
     int NREP = 500;
     acados_timer timer;
-    double Time1, Time2, Time3;
+    double Time1;
 
     int ii;
     int jj;
@@ -222,6 +222,8 @@ int main() {
 * printing
 ************************************************/
 
+    printf("\nTime: %8.5f ms\n", Time1*1E3);
+
     printf("\nxn: \n");
     for (ii=0;ii<nx;ii++)
         printf("%8.5f ",xn[ii]);
@@ -273,7 +275,7 @@ int main() {
     if(opts->sens_adj){
         struct blasfeo_dmat sA;
 		blasfeo_allocate_dmat(nx, nx+nu, &sA);
-		blasfeo_pack_dmat(nx, nx+nu, S_forw_out, nx, &sA, 0, 0);
+		blasfeo_pack_dmat(nx, nx+nu, out->S_forw, nx, &sA, 0, 0);
 
         struct blasfeo_dvec sx;
 		blasfeo_allocate_dvec(nx, &sx);

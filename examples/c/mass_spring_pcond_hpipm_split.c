@@ -195,5 +195,5 @@ int main() {
     free(arg);
     free(pcond_args);
     free(pcond_mem);
-    return 0;
+    return acados_return;
 }
